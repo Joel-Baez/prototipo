@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gestión de Vuelos</title>
+    <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+    <header>
+        <h1>Gestión de Vuelos - Microservicios</h1>
+        <button id="logoutBtn" class="hidden">Cerrar sesión</button>
+    </header>
+
+    <section id="loginSection" class="card">
+        <h2>Inicio de sesión</h2>
+        <form id="loginForm">
+            <label>Correo
+                <input type="email" name="email" required />
+            </label>
+            <label>Contraseña
+                <input type="password" name="password" required />
+            </label>
+            <button type="submit">Ingresar</button>
+        </form>
+        <p class="note">Usa los usuarios de prueba: admin@system.com / admin123 o gestor@system.com / gestor123</p>
+    </section>
+
+    <section id="adminSection" class="grid hidden">
+        <div class="card">
+            <h3>Usuarios</h3>
+            <form id="userForm">
+                <input type="text" name="name" placeholder="Nombre" required />
+                <input type="email" name="email" placeholder="Email" required />
+                <input type="password" name="password" placeholder="Contraseña" required />
+                <select name="role">
+                    <option value="gestor">Gestor</option>
+                    <option value="administrador">Administrador</option>
+                </select>
+                <button type="submit">Crear usuario</button>
+            </form>
+            <button id="loadUsers">Actualizar lista</button>
+            <pre id="usersList"></pre>
+        </div>
+
+        <div class="card">
+            <h3>Naves</h3>
+            <form id="naveForm">
+                <input type="text" name="name" placeholder="Nombre" required />
+                <input type="number" name="capacity" placeholder="Capacidad" required />
+                <input type="text" name="model" placeholder="Modelo" required />
+                <button type="submit">Registrar nave</button>
+            </form>
+            <button id="loadNaves">Ver naves</button>
+            <pre id="navesList"></pre>
+        </div>
+
+        <div class="card">
+            <h3>Vuelos</h3>
+            <form id="flightForm">
+                <input type="number" name="nave_id" placeholder="ID Nave" required />
+                <input type="text" name="origin" placeholder="Origen" required />
+                <input type="text" name="destination" placeholder="Destino" required />
+                <input type="datetime-local" name="departure" required />
+                <input type="datetime-local" name="arrival" required />
+                <input type="number" name="price" placeholder="Precio" step="0.01" required />
+                <button type="submit">Registrar vuelo</button>
+            </form>
+            <button id="loadFlights">Ver vuelos</button>
+            <pre id="flightsList"></pre>
+        </div>
+    </section>
+
+    <section id="gestorSection" class="grid hidden">
+        <div class="card">
+            <h3>Buscar vuelos</h3>
+            <form id="searchForm">
+                <input type="text" name="origin" placeholder="Origen" />
+                <input type="text" name="destination" placeholder="Destino" />
+                <input type="date" name="date" />
+                <button type="submit">Buscar</button>
+            </form>
+            <pre id="searchResults"></pre>
+        </div>
+
+        <div class="card">
+            <h3>Reservas</h3>
+            <form id="reservationForm">
+                <input type="number" name="flight_id" placeholder="ID vuelo" required />
+                <input type="number" name="user_id" placeholder="ID usuario" />
+                <button type="submit">Crear reserva</button>
+            </form>
+            <button id="loadReservations">Ver reservas</button>
+            <pre id="reservationsList"></pre>
+        </div>
+    </section>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
