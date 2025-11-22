@@ -1,9 +1,10 @@
 # Sistema de Vuelos y Reservas (Microservicios PHP)
 
-Aplicación de ejemplo basada en Slim + Eloquent organizada en dos microservicios con la estructura solicitada (`app/Controllers`, `app/Models`, `app/Middleware`, `app/Config`):
+Aplicación de ejemplo basada en Slim + Eloquent organizada en dos microservicios con la estructura solicitada (`app/Controllers`, `app/Models`, `app/Middleware`, `app/Config`).
 
-- **users_ms**: autenticación y gestión de usuarios/roles.
-- **flights_ms**: administración de naves y vuelos (administrador) y reservas (gestor).
+## Microservicios incluidos
+- **users_ms** (`services/users_ms`): autenticación y gestión de usuarios/roles.
+- **flights_ms** (`services/flights_ms`): administración de naves y vuelos (administrador) y reservas (gestor).
 
 El frontend es HTML/CSS/JS puro y consume directamente los endpoints REST.
 
