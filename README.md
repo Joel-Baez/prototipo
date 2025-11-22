@@ -1,6 +1,6 @@
 # Sistema de Vuelos y Reservas (Microservicios PHP)
 
-Aplicación de ejemplo basada en Slim + Eloquent organizada en dos microservicios:
+Aplicación de ejemplo basada en Slim + Eloquent organizada en dos microservicios con la estructura solicitada (`app/Controllers`, `app/Models`, `app/Middleware`, `app/Config`):
 
 - **users_ms**: autenticación y gestión de usuarios/roles.
 - **flights_ms**: administración de naves y vuelos (administrador) y reservas (gestor).
@@ -10,7 +10,7 @@ El frontend es HTML/CSS/JS puro y consume directamente los endpoints REST.
 ## Requisitos
 - PHP 8 con Composer (compatible con XAMPP).
 - MySQL con la base de datos `vuelos_app` creada a partir del script proporcionado.
-- Servidor web apuntando a las carpetas `services/users_ms/public` y `services/flights_ms/public` (por ejemplo, alias virtual en XAMPP) y la carpeta `frontend` para los archivos estáticos.
+- Servidor web apuntando a `services/users_ms/public` y `services/flights_ms/public` (por ejemplo, alias virtual en XAMPP) y la carpeta `frontend` para los archivos estáticos.
 
 ## Instalación de dependencias
 Ejecuta Composer en cada microservicio:
@@ -51,6 +51,14 @@ cp services/flights_ms/.env.example services/flights_ms/.env
 - `GET /reservations/user/{userId}` Reservas por usuario (gestor o administrador).
 - `POST /reservations` Crear reserva (gestor o administrador).
 - `DELETE /reservations/{id}` Cancelar reserva (gestor o administrador).
+
+## Archivos .http para Visual Studio Code
+Se incluyen ejemplos listos para la extensión **REST Client**:
+
+- `user-ms.http`: login, perfil y endpoints de usuarios.
+- `flights-ms.http`: vuelos, naves y reservas.
+
+Actualiza la variable `@token` con el valor devuelto por `/login` y ajusta `@baseUrl` si cambias el host o alias.
 
 ## Frontend
 Abrir `frontend/index.html` desde el servidor web. El token se almacena en `localStorage` y se envía en el header `Authorization: Bearer <token>`.

@@ -7,7 +7,7 @@ use App\Middleware\AuthMiddleware;
 use App\Middleware\RoleMiddleware;
 use Slim\Factory\AppFactory;
 
-require __DIR__ . '/../src/bootstrap.php';
+require __DIR__ . '/../app/bootstrap.php';
 
 $app = AppFactory::create();
 $app->addBodyParsingMiddleware();
