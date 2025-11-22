@@ -75,3 +75,39 @@ Abrir `frontend/index.html` desde el servidor web. El token se almacena en `loca
 3. Sirve la carpeta `frontend` como sitio estático para consumir los endpoints.
 
 Cada microservicio responde en JSON y valida el token en las rutas protegidas.
+
+## Paso a paso para probar los microservicios (local/VS Code REST Client)
+1. **Crear la base de datos** en MySQL con el SQL entregado en el enunciado (asegúrate de crear la base `vuelos_app`).
+2. **Instalar dependencias** (una vez por microservicio):
+   ```bash
+   cd services/users_ms && composer install
+   cd ../flights_ms && composer install
+   ```
+3. **Configurar entorno** copiando los `.env.example` y ajustando usuario/clave de MySQL:
+   ```bash
+   cp services/users_ms/.env.example services/users_ms/.env
+   cp services/flights_ms/.env.example services/flights_ms/.env
+   ```
+4. **Levantar los servicios** (puedes usar PHP embebido para pruebas rápidas):
+   - Terminal 1:
+     ```bash
+     cd services/users_ms
+     php -S 127.0.0.1:8001 -t public
+     ```
+   - Terminal 2:
+     ```bash
+     cd services/flights_ms
+     php -S 127.0.0.1:8002 -t public
+     ```
+   Ajusta `@baseUrl` en los `.http` según los puertos elegidos:
+   - `user-ms.http`: `http://127.0.0.1:8001`
+   - `flights-ms.http`: `http://127.0.0.1:8002`
+5. **Obtener token** con la extensión REST Client de VS Code:
+   - Abre `user-ms.http` y ejecuta la petición **Login** con las credenciales de prueba (`admin@system.com` o `gestor@system.com`).
+   - Copia el valor `token` de la respuesta y pégalo en la variable `@token` de ambos archivos `.http`.
+6. **Probar endpoints protegidos**:
+   - Con token de **administrador** prueba usuarios, vuelos y naves.
+   - Con token de **gestor** prueba creación/listado/cancelación de reservas.
+7. **Frontend**: si prefieres interfaz visual, sirve `frontend/` (por ejemplo `php -S 127.0.0.1:8000 -t frontend`) y usa las mismas credenciales; el token se guarda en `localStorage` y se envía en cada llamada.
+
+Si recibes 401 en rutas protegidas, revisa que el header `Authorization: Bearer <token>` se envía y que el token existe en la tabla `users`.
