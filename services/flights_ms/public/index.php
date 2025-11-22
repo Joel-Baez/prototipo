@@ -12,6 +12,11 @@ require __DIR__ . '/../app/bootstrap.php';
 $app = AppFactory::create();
 $app->addBodyParsingMiddleware();
 $app->addRoutingMiddleware();
+$app->addErrorMiddleware(true, false, false);
+
+$app->get('/', function () {
+    return json_encode(['service' => 'flights_ms', 'status' => 'ok']);
+});
 
 $auth = new AuthMiddleware();
 $admin = new RoleMiddleware(['administrador']);
