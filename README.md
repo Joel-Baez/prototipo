@@ -6,7 +6,8 @@ Aplicación de ejemplo basada en Slim + Eloquent organizada en dos microservicio
 - **users_ms** (`backend/users_ms`): autenticación y gestión de usuarios/roles.
 - **flights_ms** (`backend/flights_ms`): administración de naves y vuelos (administrador) y reservas (gestor).
 
-> Solo existe la carpeta `backend/` para los microservicios. No hay una copia en `services/` para evitar duplicados.
+> Solo debe existir la carpeta `backend/` para los microservicios. Si quedó una carpeta vieja llamada `services/` (de alguna
+> iteración anterior), elimínala para evitar duplicados o rutas rotas.
 
 El frontend es HTML/CSS/JS puro y consume directamente los endpoints REST.
 

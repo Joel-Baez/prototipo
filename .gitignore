@@ -1,4 +1,5 @@
 /vendor/
+services/
 backend/*/vendor/
 backend/*/.env
 /node_modules
