@@ -6,6 +6,8 @@ Aplicación de ejemplo basada en Slim + Eloquent organizada en dos microservicio
 - **users_ms** (`backend/users_ms`): autenticación y gestión de usuarios/roles.
 - **flights_ms** (`backend/flights_ms`): administración de naves y vuelos (administrador) y reservas (gestor).
 
+> Solo existe la carpeta `backend/` para los microservicios. No hay una copia en `services/` para evitar duplicados.
+
 El frontend es HTML/CSS/JS puro y consume directamente los endpoints REST.
 
 ## Requisitos
@@ -25,7 +27,7 @@ Sigue los pasos estándar de Slim + Composer (idénticos a la guía compartida):
    composer require vlucas/phpdotenv
    composer dump-autoload
    ```
-   > Si ya tienes `composer.json`, también puedes ejecutar `composer install` directamente.
+   > Se incluye `composer.lock` en cada microservicio para fijar versiones; al tener internet ejecuta `composer install` para descargar `vendor/`.
 3. **Copiar `.env`** desde el ejemplo y ajustar credenciales de MySQL:
    ```bash
    cp backend/users_ms/.env.example backend/users_ms/.env

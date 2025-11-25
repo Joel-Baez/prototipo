@@ -1,5 +1,5 @@
 /vendor/
-services/*/vendor/
-services/*/.env
+backend/*/vendor/
+backend/*/.env
 /node_modules
 .DS_Store
