@@ -3,20 +3,20 @@
 Aplicación de ejemplo basada en Slim + Eloquent organizada en dos microservicios con la estructura solicitada (`app/Controllers`, `app/Models`, `app/Middleware`, `app/Config`).
 
 ## Microservicios incluidos
-- **users_ms** (`services/users_ms`): autenticación y gestión de usuarios/roles.
-- **flights_ms** (`services/flights_ms`): administración de naves y vuelos (administrador) y reservas (gestor).
+- **users_ms** (`backend/users_ms`): autenticación y gestión de usuarios/roles.
+- **flights_ms** (`backend/flights_ms`): administración de naves y vuelos (administrador) y reservas (gestor).
 
 El frontend es HTML/CSS/JS puro y consume directamente los endpoints REST.
 
 ## Requisitos
 - PHP 8 con Composer (compatible con XAMPP).
 - MySQL con la base de datos `vuelos_app` creada a partir del script proporcionado.
-- Servidor web apuntando a `services/users_ms/public` y `services/flights_ms/public` (por ejemplo, alias virtual en XAMPP) y la carpeta `frontend` para los archivos estáticos.
+- Servidor web apuntando a `backend/users_ms/public` y `backend/flights_ms/public` (por ejemplo, alias virtual en XAMPP) y la carpeta `frontend` para los archivos estáticos.
 
 ## Instalación de dependencias
 Sigue los pasos estándar de Slim + Composer (idénticos a la guía compartida):
 
-1. **Entrar en cada microservicio** (`services/users_ms` y `services/flights_ms`).
+1. **Entrar en cada microservicio** (`backend/users_ms` y `backend/flights_ms`).
 2. **Instalar Slim y dependencias** (si no existe `vendor/`):
    ```bash
    composer require slim/slim:"4.*"
@@ -28,8 +28,8 @@ Sigue los pasos estándar de Slim + Composer (idénticos a la guía compartida):
    > Si ya tienes `composer.json`, también puedes ejecutar `composer install` directamente.
 3. **Copiar `.env`** desde el ejemplo y ajustar credenciales de MySQL:
    ```bash
-   cp services/users_ms/.env.example services/users_ms/.env
-   cp services/flights_ms/.env.example services/flights_ms/.env
+   cp backend/users_ms/.env.example backend/users_ms/.env
+   cp backend/flights_ms/.env.example backend/flights_ms/.env
    ```
 
 ## Endpoints principales
@@ -75,7 +75,7 @@ Abrir `frontend/index.html` desde el servidor web. El token se almacena en `loca
 1. **Ubica el proyecto en `htdocs`** (por ejemplo `C:\xampp\htdocs\prototipo`).
 2. **Instala dependencias por microservicio** desde la consola de XAMPP/PowerShell:
    ```bash
-   cd C:\xampp\htdocs\prototipo\services\users_ms
+   cd C:\xampp\htdocs\prototipo\backend\users_ms
    composer install
 
    cd ..\flights_ms
@@ -84,14 +84,14 @@ Abrir `frontend/index.html` desde el servidor web. El token se almacena en `loca
    > Esto descarga la carpeta `vendor` que faltaba para ejecutar Slim y Eloquent.
 3. **Copia los entornos** y coloca tus credenciales de MySQL:
    ```bash
-   copy C:\xampp\htdocs\prototipo\services\users_ms\.env.example C:\xampp\htdocs\prototipo\services\users_ms\.env
-   copy C:\xampp\htdocs\prototipo\services\flights_ms\.env.example C:\xampp\htdocs\prototipo\services\flights_ms\.env
+   copy C:\xampp\htdocs\prototipo\backend\users_ms\.env.example C:\xampp\htdocs\prototipo\backend\users_ms\.env
+   copy C:\xampp\htdocs\prototipo\backend\flights_ms\.env.example C:\xampp\htdocs\prototipo\backend\flights_ms\.env
    ```
    Ajusta `DB_HOST`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` a tu instancia local (la base `vuelos_app`).
 4. **Activa Apache y MySQL** desde el panel de control de XAMPP.
 5. **Rutas de prueba** (sin necesidad de alias extra) usando el DocumentRoot por defecto:
-   - Users: `http://localhost/prototipo/services/users_ms/public/index.php`
-   - Flights: `http://localhost/prototipo/services/flights_ms/public/index.php`
+   - Users: `http://localhost/prototipo/backend/users_ms/public/index.php`
+   - Flights: `http://localhost/prototipo/backend/flights_ms/public/index.php`
    - Frontend: `http://localhost/prototipo/frontend/`
 6. (Opcional) Si prefieres URLs cortas, crea dos alias o vhosts que apunten a cada carpeta `public`.
 
@@ -101,23 +101,23 @@ Cada microservicio responde en JSON y valida el token en las rutas protegidas.
 1. **Crear la base de datos** en MySQL con el SQL entregado en el enunciado (asegúrate de crear la base `vuelos_app`).
 2. **Instalar dependencias** (una vez por microservicio):
    ```bash
-   cd services/users_ms && composer install
+   cd backend/users_ms && composer install
    cd ../flights_ms && composer install
    ```
 3. **Configurar entorno** copiando los `.env.example` y ajustando usuario/clave de MySQL:
    ```bash
-   cp services/users_ms/.env.example services/users_ms/.env
-   cp services/flights_ms/.env.example services/flights_ms/.env
+   cp backend/users_ms/.env.example backend/users_ms/.env
+   cp backend/flights_ms/.env.example backend/flights_ms/.env
    ```
 4. **Levantar los servicios** (puedes usar PHP embebido para pruebas rápidas):
    - Terminal 1:
      ```bash
-     cd services/users_ms
+     cd backend/users_ms
      php -S 127.0.0.1:8001 -t public
      ```
    - Terminal 2:
      ```bash
-     cd services/flights_ms
+     cd backend/flights_ms
      php -S 127.0.0.1:8002 -t public
      ```
    Ajusta `@baseUrl` en los `.http` según los puertos elegidos:

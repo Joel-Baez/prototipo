@@ -1,4 +1,4 @@
-@baseUrl = http://localhost/prototipo/services/users_ms/public
+@baseUrl = http://localhost/prototipo/backend/users_ms/public
 @token = {{token}}
 
 ### Login (público)

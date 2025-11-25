@@ -1,4 +1,4 @@
-@baseUrl = http://localhost/prototipo/services/flights_ms/public
+@baseUrl = http://localhost/prototipo/backend/flights_ms/public
 @token = {{token}}
 
 ### Listar vuelos (admin)
