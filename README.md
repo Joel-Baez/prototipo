@@ -28,7 +28,7 @@ Sigue los pasos estándar de Slim + Composer (idénticos a la guía compartida):
    composer require vlucas/phpdotenv
    composer dump-autoload
    ```
-   > Se incluye `composer.lock` en cada microservicio para fijar versiones; al tener internet ejecuta `composer install` para descargar `vendor/`.
+   > Ejecutar `composer install` generará el `composer.lock` y la carpeta `vendor/` automáticamente con las versiones correctas. Si ya tienes internet disponible, basta con ese comando en cada microservicio.
 3. **Copiar `.env`** desde el ejemplo y ajustar credenciales de MySQL:
    ```bash
    cp backend/users_ms/.env.example backend/users_ms/.env
