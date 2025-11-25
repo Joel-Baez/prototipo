@@ -29,6 +29,7 @@ Sigue los pasos estándar de Slim + Composer (idénticos a la guía compartida):
    composer dump-autoload
    ```
    > Ejecutar `composer install` generará el `composer.lock` y la carpeta `vendor/` automáticamente con las versiones correctas. Si ya tienes internet disponible, basta con ese comando en cada microservicio.
+   > **No borres `composer.json` ni `composer.lock`**: son necesarios para que `composer install` resuelva las dependencias. El archivo `composer.lock` se recrea si falta, pero debe quedar junto al `composer.json` de cada microservicio.
 3. **Copiar `.env`** desde el ejemplo y ajustar credenciales de MySQL:
    ```bash
    cp backend/users_ms/.env.example backend/users_ms/.env
