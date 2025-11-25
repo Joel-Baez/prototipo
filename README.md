@@ -14,19 +14,23 @@ El frontend es HTML/CSS/JS puro y consume directamente los endpoints REST.
 - Servidor web apuntando a `services/users_ms/public` y `services/flights_ms/public` (por ejemplo, alias virtual en XAMPP) y la carpeta `frontend` para los archivos estáticos.
 
 ## Instalación de dependencias
-Ejecuta Composer en cada microservicio:
+Sigue los pasos estándar de Slim + Composer (idénticos a la guía compartida):
 
-```bash
-cd services/users_ms && composer install
-cd ../flights_ms && composer install
-```
-
-Copia el archivo `.env.example` de cada servicio a `.env` y ajusta las credenciales:
-
-```bash
-cp services/users_ms/.env.example services/users_ms/.env
-cp services/flights_ms/.env.example services/flights_ms/.env
-```
+1. **Entrar en cada microservicio** (`services/users_ms` y `services/flights_ms`).
+2. **Instalar Slim y dependencias** (si no existe `vendor/`):
+   ```bash
+   composer require slim/slim:"4.*"
+   composer require slim/psr7
+   composer require illuminate/database
+   composer require vlucas/phpdotenv
+   composer dump-autoload
+   ```
+   > Si ya tienes `composer.json`, también puedes ejecutar `composer install` directamente.
+3. **Copiar `.env`** desde el ejemplo y ajustar credenciales de MySQL:
+   ```bash
+   cp services/users_ms/.env.example services/users_ms/.env
+   cp services/flights_ms/.env.example services/flights_ms/.env
+   ```
 
 ## Endpoints principales
 ### users_ms
