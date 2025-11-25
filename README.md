@@ -71,12 +71,29 @@ Abrir `frontend/index.html` desde el servidor web. El token se almacena en `loca
 - Usa las credenciales de prueba `admin@system.com / admin123` y `gestor@system.com / gestor123` (según el SQL suministrado).
 - Las secciones de administración y gestor se muestran según el rol devuelto por `/login`.
 
-## Puesta en marcha en XAMPP
-1. Ubica el proyecto dentro de la carpeta pública de XAMPP.
-2. Configura dos alias virtuales o rutas:
-   - `http://localhost/users_ms/public/index.php`
-   - `http://localhost/flights_ms/public/index.php`
-3. Sirve la carpeta `frontend` como sitio estático para consumir los endpoints.
+## Puesta en marcha en XAMPP (Apache + MySQL)
+1. **Ubica el proyecto en `htdocs`** (por ejemplo `C:\xampp\htdocs\prototipo`).
+2. **Instala dependencias por microservicio** desde la consola de XAMPP/PowerShell:
+   ```bash
+   cd C:\xampp\htdocs\prototipo\services\users_ms
+   composer install
+
+   cd ..\flights_ms
+   composer install
+   ```
+   > Esto descarga la carpeta `vendor` que faltaba para ejecutar Slim y Eloquent.
+3. **Copia los entornos** y coloca tus credenciales de MySQL:
+   ```bash
+   copy C:\xampp\htdocs\prototipo\services\users_ms\.env.example C:\xampp\htdocs\prototipo\services\users_ms\.env
+   copy C:\xampp\htdocs\prototipo\services\flights_ms\.env.example C:\xampp\htdocs\prototipo\services\flights_ms\.env
+   ```
+   Ajusta `DB_HOST`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` a tu instancia local (la base `vuelos_app`).
+4. **Activa Apache y MySQL** desde el panel de control de XAMPP.
+5. **Rutas de prueba** (sin necesidad de alias extra) usando el DocumentRoot por defecto:
+   - Users: `http://localhost/prototipo/services/users_ms/public/index.php`
+   - Flights: `http://localhost/prototipo/services/flights_ms/public/index.php`
+   - Frontend: `http://localhost/prototipo/frontend/`
+6. (Opcional) Si prefieres URLs cortas, crea dos alias o vhosts que apunten a cada carpeta `public`.
 
 Cada microservicio responde en JSON y valida el token en las rutas protegidas.
 
