@@ -57,7 +57,18 @@ function get_json_input(): array
 
 function bearer_token(): ?string
 {
-    $auth = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+    // Compatibilidad con PHP built-in server, Apache y Nginx
+    $auth = $_SERVER['HTTP_AUTHORIZATION'] ?? ($_SERVER['Authorization'] ?? '');
+    if (!$auth && function_exists('apache_request_headers')) {
+        $headers = apache_request_headers();
+        foreach ($headers as $key => $value) {
+            if (strtolower($key) === 'authorization') {
+                $auth = $value;
+                break;
+            }
+        }
+    }
+
     if (starts_with($auth, 'Bearer ')) {
         return substr($auth, 7);
     }
