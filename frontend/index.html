@@ -9,8 +9,14 @@
 <body>
     <header>
         <h1>Gestión de Vuelos - Microservicios</h1>
-        <button id="logoutBtn" class="hidden">Cerrar sesión</button>
+        <div class="status-bar">
+            <span class="pill" id="roleBadge">Sesión no iniciada</span>
+            <span class="pill" id="endpointsInfo">Backend listo</span>
+            <button id="logoutBtn" class="hidden">Cerrar sesión</button>
+        </div>
     </header>
+
+    <div id="toast" class="toast hidden"></div>
 
     <section id="loginSection" class="card">
         <h2>Inicio de sesión</h2>

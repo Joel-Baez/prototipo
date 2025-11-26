@@ -16,16 +16,23 @@ const isDevPort = devPorts.includes(window.location.port);
 const guessedUsersApi = `${window.location.protocol}//${window.location.hostname}:8001`;
 const guessedFlightsApi = `${window.location.protocol}//${window.location.hostname}:8002`;
 
-const USERS_API = (usersApiOverride
-    || (isDevPort ? guessedUsersApi : `${BASE_URL}/backend/users_ms/public`)).replace(/\/$/, '');
-const FLIGHTS_API = (flightsApiOverride
-    || (isDevPort ? guessedFlightsApi : `${BASE_URL}/backend/flights_ms/public`)).replace(/\/$/, '');
-
 const loginForm = document.getElementById('loginForm');
 const logoutBtn = document.getElementById('logoutBtn');
 const loginSection = document.getElementById('loginSection');
 const adminSection = document.getElementById('adminSection');
 const gestorSection = document.getElementById('gestorSection');
+const toast = document.getElementById('toast');
+const roleBadge = document.getElementById('roleBadge');
+const endpointsInfo = document.getElementById('endpointsInfo');
+
+const USERS_API = (usersApiOverride
+    || (isDevPort ? guessedUsersApi : `${BASE_URL}/backend/users_ms/public`)).replace(/\/$/, '');
+const FLIGHTS_API = (flightsApiOverride
+    || (isDevPort ? guessedFlightsApi : `${BASE_URL}/backend/flights_ms/public`)).replace(/\/$/, '');
+
+if (endpointsInfo) {
+    endpointsInfo.textContent = `Usuarios: ${USERS_API} | Vuelos: ${FLIGHTS_API}`;
+}
 
 // Preferimos sessionStorage para que el token se mantenga solo durante la sesión activa
 const storage = window.sessionStorage;
@@ -40,8 +47,18 @@ const role = () => storage.getItem('role');
 
 const authHeaders = () => ({
     'Content-Type': 'application/json',
-    Authorization: `Bearer ${token()}`,
+    ...(token() ? { Authorization: `Bearer ${token()}` } : {}),
 });
+
+let toastTimer;
+function showToast(message, type = 'error') {
+    if (!toast) return;
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    toast.classList.remove('hidden');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.add('hidden'), 4200);
+}
 
 const actionButtons = (actions = []) => {
     const wrapper = document.createElement('div');
@@ -94,7 +111,7 @@ const handleError = async (res) => {
         storage.clear();
         toggleSections();
     }
-    alert(payload.error || `Error (${res.status}) en la solicitud`);
+    showToast(payload.error || `Error (${res.status}) en la solicitud`, 'error');
 };
 
 loginForm.addEventListener('submit', async (e) => {
@@ -112,6 +129,7 @@ loginForm.addEventListener('submit', async (e) => {
     storage.setItem('token', data.token);
     storage.setItem('role', data.role);
     toggleSections();
+    showToast(`Sesión iniciada como ${data.role}`, 'success');
     if (data.role === 'administrador') {
         loadUsers();
         loadNaves();
@@ -129,6 +147,7 @@ logoutBtn.addEventListener('click', async () => {
     await fetch(`${USERS_API}/logout`, { method: 'POST', headers: authHeaders() });
     storage.clear();
     toggleSections();
+    showToast('Sesión finalizada', 'success');
 });
 
 function toggleSections() {
@@ -138,6 +157,9 @@ function toggleSections() {
     adminSection.classList.toggle('hidden', !(hasToken && role() === 'administrador'));
     // Solo el gestor puede operar reservas según los requisitos
     gestorSection.classList.toggle('hidden', !(hasToken && role() === 'gestor'));
+    if (roleBadge) {
+        roleBadge.textContent = hasToken ? `Rol: ${role()}` : 'Sesión no iniciada';
+    }
 }
 
 toggleSections();
@@ -149,6 +171,7 @@ async function restoreSession() {
     if (!res.ok) {
         storage.clear();
         toggleSections();
+        showToast('Tu sesión expiró, inicia de nuevo.', 'error');
         return;
     }
     const data = await res.json();
