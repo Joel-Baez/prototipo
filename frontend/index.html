@@ -160,18 +160,21 @@
             </div>
         </div>
 
-        <div class="card">
-            <div class="card-header">
-                <div>
-                    <p class="eyebrow">Gestor</p>
-                    <h3>Reservas</h3>
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <p class="eyebrow">Gestor</p>
+                        <h3>Reservas</h3>
+                    </div>
+                    <div class="inline-controls">
+                        <input type="number" id="reservationsUserFilter" placeholder="Filtrar por ID de usuario" />
+                        <button id="loadReservations" class="ghost">Ver reservas</button>
+                    </div>
                 </div>
-                <button id="loadReservations" class="ghost">Ver reservas</button>
-            </div>
-            <form id="reservationForm" class="stacked">
-                <input type="number" name="flight_id" placeholder="ID vuelo" required />
-                <input type="number" name="user_id" placeholder="ID usuario" />
-                <button type="submit">Crear reserva</button>
+                <form id="reservationForm" class="stacked">
+                    <input type="number" name="flight_id" placeholder="ID vuelo" required />
+                    <input type="number" name="user_id" placeholder="ID usuario" />
+                    <button type="submit">Crear reserva</button>
             </form>
             <div class="table-wrapper">
                 <table id="reservationsTable">

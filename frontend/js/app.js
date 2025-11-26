@@ -76,8 +76,17 @@ const renderTable = (tableId, data, columns) => {
 };
 
 const handleError = async (res) => {
-    const payload = await res.json();
-    alert(payload.error || 'Error en la solicitud');
+    let payload = {};
+    try {
+        payload = await res.json();
+    } catch (e) {
+        // Ignorar si la respuesta no tiene cuerpo JSON
+    }
+    if (res.status === 401) {
+        localStorage.clear();
+        toggleSections();
+    }
+    alert(payload.error || `Error (${res.status}) en la solicitud`);
 };
 
 loginForm.addEventListener('submit', async (e) => {
@@ -97,9 +106,11 @@ loginForm.addEventListener('submit', async (e) => {
     if (data.role === 'administrador') {
         loadUsers();
         loadNaves();
-        loadFlights();
     }
     if (['gestor', 'administrador'].includes(data.role)) {
+        loadFlights();
+    }
+    if (data.role === 'gestor') {
         loadReservations();
     }
 });
@@ -116,7 +127,8 @@ function toggleSections() {
     loginSection.classList.toggle('hidden', hasToken);
     logoutBtn.classList.toggle('hidden', !hasToken);
     adminSection.classList.toggle('hidden', !(hasToken && role() === 'administrador'));
-    gestorSection.classList.toggle('hidden', !(hasToken && (role() === 'gestor' || role() === 'administrador')));
+    // Solo el gestor puede operar reservas según los requisitos
+    gestorSection.classList.toggle('hidden', !(hasToken && role() === 'gestor'));
 }
 
 toggleSections();
@@ -357,6 +369,7 @@ searchForm.addEventListener('submit', async (e) => {
 });
 
 const reservationForm = document.getElementById('reservationForm');
+const reservationsUserFilter = document.getElementById('reservationsUserFilter');
 document.getElementById('loadReservations').addEventListener('click', loadReservations);
 reservationForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -372,7 +385,9 @@ reservationForm.addEventListener('submit', async (e) => {
 });
 
 async function loadReservations() {
-    const res = await fetch(`${FLIGHTS_API}/reservations`, { headers: authHeaders() });
+    const filter = reservationsUserFilter?.value;
+    const query = filter ? `?user_id=${encodeURIComponent(filter)}` : '';
+    const res = await fetch(`${FLIGHTS_API}/reservations${query}`, { headers: authHeaders() });
     if (!res.ok) return handleError(res);
     const data = await res.json();
     renderTable('reservationsTable', data, [
