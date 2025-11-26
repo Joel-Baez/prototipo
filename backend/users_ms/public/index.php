@@ -79,6 +79,19 @@ function bearer_token(): ?string
     return null;
 }
 
+function generate_unique_token(PDO $pdo): string
+{
+    // Garantiza un token único en la tabla users para la sesión actual
+    while (true) {
+        $token = bin2hex(random_bytes(24));
+        $stmt = $pdo->prepare('SELECT id FROM users WHERE token = ? LIMIT 1');
+        $stmt->execute([$token]);
+        if (!$stmt->fetch()) {
+            return $token;
+        }
+    }
+}
+
 function current_user(): ?array
 {
     $token = bearer_token();
@@ -138,7 +151,7 @@ if ($method === 'POST' && $path === '/login') {
         json_response(['error' => 'Credenciales inválidas'], 401);
     }
 
-    $token = bin2hex(random_bytes(24));
+    $token = generate_unique_token(db());
     $upd = db()->prepare('UPDATE users SET token = ? WHERE id = ?');
     $upd->execute([$token, $user['id']]);
     $user['token'] = $token;

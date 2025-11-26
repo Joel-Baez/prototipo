@@ -27,8 +27,16 @@ const loginSection = document.getElementById('loginSection');
 const adminSection = document.getElementById('adminSection');
 const gestorSection = document.getElementById('gestorSection');
 
-const token = () => localStorage.getItem('token');
-const role = () => localStorage.getItem('role');
+// Preferimos sessionStorage para que el token se mantenga solo durante la sesión activa
+const storage = window.sessionStorage;
+// Migrar tokens previos guardados en localStorage si existen
+if (localStorage.getItem('token')) {
+    storage.setItem('token', localStorage.getItem('token'));
+    storage.setItem('role', localStorage.getItem('role'));
+    localStorage.clear();
+}
+const token = () => storage.getItem('token');
+const role = () => storage.getItem('role');
 
 const authHeaders = () => ({
     'Content-Type': 'application/json',
@@ -100,8 +108,8 @@ loginForm.addEventListener('submit', async (e) => {
 
     if (!res.ok) return handleError(res);
     const data = await res.json();
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('role', data.role);
+    storage.setItem('token', data.token);
+    storage.setItem('role', data.role);
     toggleSections();
     if (data.role === 'administrador') {
         loadUsers();
@@ -118,7 +126,7 @@ loginForm.addEventListener('submit', async (e) => {
 logoutBtn.addEventListener('click', async () => {
     if (!token()) return;
     await fetch(`${USERS_API}/logout`, { method: 'POST', headers: authHeaders() });
-    localStorage.clear();
+    storage.clear();
     toggleSections();
 });
 

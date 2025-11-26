@@ -67,7 +67,7 @@ Se incluyen ejemplos listos para la extensión **REST Client**:
 Actualiza la variable `@token` con el valor devuelto por `/login` y ajusta `@baseUrl` si cambias el host o alias.
 
 ## Frontend
-Abrir `frontend/index.html` desde el servidor web. El token se almacena en `localStorage` y se envía en el header `Authorization: Bearer <token>`.
+Abrir `frontend/index.html` desde el servidor web. El token se almacena en `sessionStorage` (por sesión del navegador) y se envía en el header `Authorization: Bearer <token>`.
 
 - Usa las credenciales de prueba `admin@system.com / admin123` y `gestor@system.com / gestor123` (según el SQL suministrado).
 - Las secciones de administración y gestor se muestran según el rol devuelto por `/login`.
