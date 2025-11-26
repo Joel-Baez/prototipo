@@ -98,6 +98,7 @@ Abrir `frontend/index.html` desde el servidor web. El token se almacena en `loca
    - Flights: `http://localhost/prototipo/backend/flights_ms/public/index.php`
    - Frontend: `http://localhost/prototipo/frontend/`
    Las reglas `.htaccess` ya están incluidas en cada carpeta `public` para que Apache reescriba al `index.php` de Slim.
+   > El frontend detecta automáticamente la carpeta raíz donde se hospeda (por ejemplo `http://127.0.0.1/prototipo/frontend/`) y llama a los microservicios usando la misma raíz (`/backend/users_ms/public`, `/backend/flights_ms/public`). No es necesario cambiar el código si usas `localhost` o `127.0.0.1` mientras mantengas la estructura `htdocs/prototipo`.
 6. (Opcional) Si prefieres URLs cortas, crea dos alias o vhosts que apunten a cada carpeta `public`.
 
 Cada microservicio responde en JSON y valida el token en las rutas protegidas.

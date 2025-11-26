@@ -1,5 +1,12 @@
-const USERS_API = 'http://localhost/users_ms/public';
-const FLIGHTS_API = 'http://localhost/flights_ms/public';
+// Detect the project base to avoid hardcoding localhost vs 127.0.0.1 and ensure the
+// frontend consumes the two microservices under the same root folder (htdocs/prototipo).
+const projectRoot = window.location.pathname.includes('/frontend')
+    ? window.location.pathname.split('/frontend')[0]
+    : '';
+const BASE_URL = `${window.location.origin}${projectRoot}`;
+
+const USERS_API = `${BASE_URL}/backend/users_ms/public`;
+const FLIGHTS_API = `${BASE_URL}/backend/flights_ms/public`;
 
 const loginForm = document.getElementById('loginForm');
 const logoutBtn = document.getElementById('logoutBtn');
