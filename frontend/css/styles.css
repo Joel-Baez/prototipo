@@ -162,3 +162,33 @@ tbody tr:hover {
     border-radius: 10px;
     border: 1px dashed #c7d2fe;
 }
+
+th.actions {
+    width: 180px;
+}
+
+.actions-cell {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.chip {
+    border-radius: 999px;
+    padding: 0.4rem 0.75rem;
+    border: 1px solid var(--border);
+    background: #fff;
+    color: var(--text);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.chip.ghost {
+    border-color: var(--border);
+    color: var(--primary-dark);
+}
+
+.chip.danger {
+    border-color: #ef4444;
+    color: #b91c1c;
+    background: #fef2f2;
+}

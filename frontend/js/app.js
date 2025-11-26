@@ -35,6 +35,20 @@ const authHeaders = () => ({
     Authorization: `Bearer ${token()}`,
 });
 
+const actionButtons = (actions = []) => {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'actions-cell';
+    actions.forEach(({ label, onClick, tone = 'ghost' }) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = label;
+        btn.className = `chip ${tone}`;
+        btn.addEventListener('click', onClick);
+        wrapper.appendChild(btn);
+    });
+    return wrapper;
+};
+
 const renderTable = (tableId, data, columns) => {
     const tbody = document.querySelector(`#${tableId} tbody`);
     if (!tbody) return;
@@ -46,9 +60,15 @@ const renderTable = (tableId, data, columns) => {
 
     data.forEach((item) => {
         const tr = document.createElement('tr');
-        columns.forEach((key) => {
+        columns.forEach((col) => {
             const td = document.createElement('td');
-            td.textContent = typeof key === 'function' ? key(item) : (item[key] ?? '');
+            if (typeof col === 'function') {
+                td.textContent = col(item);
+            } else if (typeof col === 'object' && col.render) {
+                td.appendChild(col.render(item));
+            } else {
+                td.textContent = item[col] ?? '';
+            }
             tr.appendChild(td);
         });
         tbody.appendChild(tr);
@@ -121,7 +141,54 @@ async function loadUsers() {
     const res = await fetch(`${USERS_API}/users`, { headers: authHeaders() });
     if (!res.ok) return handleError(res);
     const data = await res.json();
-    renderTable('usersTable', data, ['id', 'name', 'email', 'role']);
+    renderTable('usersTable', data, [
+        'id',
+        'name',
+        'email',
+        'role',
+        {
+            render: (user) => actionButtons([
+                {
+                    label: 'Editar',
+                    onClick: () => updateUser(user),
+                },
+                {
+                    label: 'Cambiar rol',
+                    onClick: () => changeUserRole(user),
+                },
+            ]),
+        },
+    ]);
+}
+
+async function updateUser(user) {
+    const name = prompt('Nombre', user.name);
+    const email = prompt('Email', user.email);
+    const password = prompt('Contraseña (déjalo vacío para no cambiar)');
+    const payload = {};
+    if (name && name !== user.name) payload.name = name;
+    if (email && email !== user.email) payload.email = email;
+    if (password) payload.password = password;
+    if (!Object.keys(payload).length) return;
+    const res = await fetch(`${USERS_API}/users/${user.id}`, {
+        method: 'PUT',
+        headers: authHeaders(),
+        body: JSON.stringify(payload),
+    });
+    if (!res.ok) return handleError(res);
+    loadUsers();
+}
+
+async function changeUserRole(user) {
+    const newRole = prompt('Rol (administrador/gestor)', user.role);
+    if (!newRole) return;
+    const res = await fetch(`${USERS_API}/users/${user.id}/role`, {
+        method: 'PUT',
+        headers: authHeaders(),
+        body: JSON.stringify({ role: newRole }),
+    });
+    if (!res.ok) return handleError(res);
+    loadUsers();
 }
 
 const naveForm = document.getElementById('naveForm');
@@ -144,7 +211,53 @@ async function loadNaves() {
     const res = await fetch(`${FLIGHTS_API}/naves`, { headers: authHeaders() });
     if (!res.ok) return handleError(res);
     const data = await res.json();
-    renderTable('navesTable', data, ['id', 'name', 'capacity', 'model']);
+    renderTable('navesTable', data, [
+        'id',
+        'name',
+        'capacity',
+        'model',
+        {
+            render: (nave) => actionButtons([
+                {
+                    label: 'Editar',
+                    onClick: () => updateNave(nave),
+                },
+                {
+                    label: 'Eliminar',
+                    tone: 'danger',
+                    onClick: () => deleteNave(nave.id),
+                },
+            ]),
+        },
+    ]);
+}
+
+async function updateNave(nave) {
+    const name = prompt('Nombre', nave.name);
+    const capacity = prompt('Capacidad', nave.capacity);
+    const model = prompt('Modelo', nave.model);
+    const payload = {};
+    if (name && name !== nave.name) payload.name = name;
+    if (capacity) payload.capacity = Number(capacity);
+    if (model && model !== nave.model) payload.model = model;
+    if (!Object.keys(payload).length) return;
+    const res = await fetch(`${FLIGHTS_API}/naves/${nave.id}`, {
+        method: 'PUT',
+        headers: authHeaders(),
+        body: JSON.stringify(payload),
+    });
+    if (!res.ok) return handleError(res);
+    loadNaves();
+}
+
+async function deleteNave(id) {
+    if (!confirm('¿Eliminar esta nave?')) return;
+    const res = await fetch(`${FLIGHTS_API}/naves/${id}`, {
+        method: 'DELETE',
+        headers: authHeaders(),
+    });
+    if (!res.ok) return handleError(res);
+    loadNaves();
 }
 
 const flightForm = document.getElementById('flightForm');
@@ -174,7 +287,54 @@ async function loadFlights() {
         (row) => row.arrival?.replace('T', ' ') ?? row.arrival,
         'nave_name',
         (row) => row.price,
+        {
+            render: (flight) => actionButtons([
+                {
+                    label: 'Editar',
+                    onClick: () => updateFlight(flight),
+                },
+                {
+                    label: 'Eliminar',
+                    tone: 'danger',
+                    onClick: () => deleteFlight(flight.id),
+                },
+            ]),
+        },
     ]);
+}
+
+async function updateFlight(flight) {
+    const payload = {};
+    const fields = [
+        ['nave_id', flight.nave_id],
+        ['origin', flight.origin],
+        ['destination', flight.destination],
+        ['departure', flight.departure?.replace(' ', 'T')],
+        ['arrival', flight.arrival?.replace(' ', 'T')],
+        ['price', flight.price],
+    ];
+    fields.forEach(([key, current]) => {
+        const value = prompt(key, current);
+        if (value !== null && value !== '') payload[key] = value;
+    });
+    if (!Object.keys(payload).length) return;
+    const res = await fetch(`${FLIGHTS_API}/flights/${flight.id}`, {
+        method: 'PUT',
+        headers: authHeaders(),
+        body: JSON.stringify(payload),
+    });
+    if (!res.ok) return handleError(res);
+    loadFlights();
+}
+
+async function deleteFlight(id) {
+    if (!confirm('¿Eliminar este vuelo?')) return;
+    const res = await fetch(`${FLIGHTS_API}/flights/${id}`, {
+        method: 'DELETE',
+        headers: authHeaders(),
+    });
+    if (!res.ok) return handleError(res);
+    loadFlights();
 }
 
 // Gestor actions
@@ -222,5 +382,24 @@ async function loadReservations() {
         'destination',
         (row) => row.departure?.replace('T', ' ') ?? row.departure,
         'status',
+        {
+            render: (reservation) => actionButtons([
+                {
+                    label: 'Cancelar',
+                    tone: 'danger',
+                    onClick: () => cancelReservation(reservation.id),
+                },
+            ]),
+        },
     ]);
+}
+
+async function cancelReservation(id) {
+    if (!confirm('¿Cancelar esta reserva?')) return;
+    const res = await fetch(`${FLIGHTS_API}/reservations/${id}/cancel`, {
+        method: 'PUT',
+        headers: authHeaders(),
+    });
+    if (!res.ok) return handleError(res);
+    loadReservations();
 }
