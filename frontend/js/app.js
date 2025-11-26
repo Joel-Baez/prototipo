@@ -94,7 +94,7 @@ async function loadUsers() {
     const res = await fetch(`${USERS_API}/users`, { headers: authHeaders() });
     if (!res.ok) return handleError(res);
     const data = await res.json();
-    usersList.textContent = JSON.stringify(data.users, null, 2);
+    usersList.textContent = JSON.stringify(data, null, 2);
 }
 
 const naveForm = document.getElementById('naveForm');
@@ -118,7 +118,7 @@ async function loadNaves() {
     const res = await fetch(`${FLIGHTS_API}/naves`, { headers: authHeaders() });
     if (!res.ok) return handleError(res);
     const data = await res.json();
-    navesList.textContent = JSON.stringify(data.naves, null, 2);
+    navesList.textContent = JSON.stringify(data, null, 2);
 }
 
 const flightForm = document.getElementById('flightForm');
@@ -141,7 +141,7 @@ async function loadFlights() {
     const res = await fetch(`${FLIGHTS_API}/flights`, { headers: authHeaders() });
     if (!res.ok) return handleError(res);
     const data = await res.json();
-    flightsList.textContent = JSON.stringify(data.flights, null, 2);
+    flightsList.textContent = JSON.stringify(data, null, 2);
 }
 
 // Gestor actions
@@ -150,10 +150,10 @@ const searchResults = document.getElementById('searchResults');
 searchForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const params = new URLSearchParams(Object.fromEntries(new FormData(searchForm))).toString();
-    const res = await fetch(`${FLIGHTS_API}/flights/search?${params}`, { headers: authHeaders() });
+    const res = await fetch(`${FLIGHTS_API}/flights?${params}`, { headers: authHeaders() });
     if (!res.ok) return handleError(res);
     const data = await res.json();
-    searchResults.textContent = JSON.stringify(data.flights, null, 2);
+    searchResults.textContent = JSON.stringify(data, null, 2);
 });
 
 const reservationForm = document.getElementById('reservationForm');
@@ -176,5 +176,5 @@ async function loadReservations() {
     const res = await fetch(`${FLIGHTS_API}/reservations`, { headers: authHeaders() });
     if (!res.ok) return handleError(res);
     const data = await res.json();
-    reservationsList.textContent = JSON.stringify(data.reservations, null, 2);
+    reservationsList.textContent = JSON.stringify(data, null, 2);
 }

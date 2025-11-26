@@ -1,6 +1,7 @@
 # Sistema de Vuelos y Reservas (Microservicios PHP)
 
-Aplicación de ejemplo basada en Slim + Eloquent organizada en dos microservicios con la estructura solicitada (`app/Controllers`, `app/Models`, `app/Middleware`, `app/Config`).
+Aplicación de ejemplo organizada en dos microservicios (`backend/users_ms` y `backend/flights_ms`).
+Ahora los front controllers están implementados en PHP plano con PDO, sin depender de `vendor/` ni de Composer para arrancar (útil cuando no puedes descargar paquetes). Se mantienen los archivos `composer.json` si quieres restaurar Slim/Eloquent con conexión a internet.
 
 ## Microservicios incluidos
 - **users_ms** (`backend/users_ms`): autenticación y gestión de usuarios/roles.
@@ -12,33 +13,31 @@ Aplicación de ejemplo basada en Slim + Eloquent organizada en dos microservicio
 El frontend es HTML/CSS/JS puro y consume directamente los endpoints REST.
 
 ## Requisitos
-- PHP 8 con Composer (compatible con XAMPP).
+- PHP 8 (compatible con XAMPP). Composer es opcional: solo lo necesitas si deseas reinstalar Slim/Eloquent; la versión incluida funciona sin `vendor/`.
 - MySQL con la base de datos `vuelos_app` creada a partir del script proporcionado.
 - Servidor web apuntando a `backend/users_ms/public` y `backend/flights_ms/public` (por ejemplo, alias virtual en XAMPP) y la carpeta `frontend` para los archivos estáticos.
 
-## Instalación de dependencias
-Sigue los pasos estándar de Slim + Composer (idénticos a la guía compartida):
+## Instalación rápida (sin Composer)
+1. Clona o copia la carpeta en `htdocs` (por ejemplo `C:\xampp\htdocs\prototipo`).
+2. Configura tu base de datos MySQL con el script `vuelos_app` proporcionado.
+3. Arranca cada microservicio con PHP embebido:
+   ```bash
+   cd backend/users_ms && php -S 127.0.0.1:8001 -t public
+   cd backend/flights_ms && php -S 127.0.0.1:8002 -t public
+   ```
+   También puedes servirlos con Apache apuntando a cada `public/`.
+4. Abre el frontend: `php -S 127.0.0.1:8000 -t frontend` o `http://localhost/prototipo/frontend/` en Apache. El frontend detecta las URLs de los microservicios automáticamente.
 
-1. **Entrar en cada microservicio** (`backend/users_ms` y `backend/flights_ms`).
-2. **Instalar Slim y dependencias** (si no existe `vendor/`):
-   ```bash
-   composer require slim/slim:"4.*"
-   composer require slim/psr7
-   composer require illuminate/database
-   composer require vlucas/phpdotenv
-   composer dump-autoload
-   ```
-   > Ejecutar `composer install` generará el `composer.lock` y la carpeta `vendor/` automáticamente con las versiones correctas. Si ya tienes internet disponible, basta con ese comando en cada microservicio.
-   > **No borres `composer.json` ni `composer.lock`**: son necesarios para que `composer install` resuelva las dependencias. El archivo `composer.lock` se recrea si falta, pero debe quedar junto al `composer.json` de cada microservicio.
-3. **Copiar `.env`** desde el ejemplo y ajustar credenciales de MySQL:
-   ```bash
-   cp backend/users_ms/.env.example backend/users_ms/.env
-   cp backend/flights_ms/.env.example backend/flights_ms/.env
-   ```
+## (Opcional) Instalar dependencias con Composer
+Si cuentas con internet y prefieres usar Slim/Eloquent, conserva `composer.json` y ejecuta en cada microservicio:
+```bash
+composer install
+```
+Esto recreará `vendor/` y habilitará el código basado en Slim existente en `app/`.
 
 ## Endpoints principales
-### users_ms
-- `POST /login` Iniciar sesión y obtener token. Acepta tanto `email/password` (formulario actual) como los campos `user/pwd` usados en el ejemplo del profesor.
+### users_ms (PHP plano)
+- `POST /login` Iniciar sesión y obtener token. Acepta `email/password` o `user/pwd`.
 - `POST /logout` Cerrar sesión (requiere token).
 - `GET /me` Perfil actual (requiere token).
 - `POST /users` Crear usuario (solo administrador).
@@ -46,20 +45,18 @@ Sigue los pasos estándar de Slim + Composer (idénticos a la guía compartida):
 - `PUT /users/{id}` Actualizar datos (solo administrador).
 - `PUT /users/{id}/role` Cambiar rol (solo administrador).
 
-### flights_ms
-- `GET /flights` Listar vuelos (solo administrador).
-- `GET /flights/search` Búsqueda por origen/destino/fecha (solo administrador).
-- `POST /flights` Crear vuelo (solo administrador).
-- `PUT /flights/{id}` Actualizar vuelo (solo administrador).
-- `DELETE /flights/{id}` Eliminar vuelo (solo administrador).
-- `GET /naves` Listar naves (solo administrador).
-- `POST /naves` Crear nave (solo administrador).
-- `PUT /naves/{id}` Actualizar nave (solo administrador).
-- `DELETE /naves/{id}` Eliminar nave (solo administrador).
-- `GET /reservations` Listar reservas (gestor o administrador).
-- `GET /reservations/user/{userId}` Reservas por usuario (gestor o administrador).
-- `POST /reservations` Crear reserva (gestor o administrador).
-- `DELETE /reservations/{id}` Cancelar reserva (gestor o administrador).
+### flights_ms (PHP plano)
+- `GET /flights` Listar o buscar vuelos por `origin`, `destination` o `date` (parámetros de query). No requiere rol.
+- `POST /flights` Crear vuelo (administrador).
+- `PUT /flights/{id}` Actualizar vuelo (administrador).
+- `DELETE /flights/{id}` Eliminar vuelo (administrador).
+- `GET /naves` Listar naves (administrador).
+- `POST /naves` Crear nave (administrador).
+- `PUT /naves/{id}` Actualizar nave (administrador).
+- `DELETE /naves/{id}` Eliminar nave (administrador).
+- `GET /reservations` Listar reservas (gestor).
+- `POST /reservations` Crear reserva (gestor).
+- `PUT /reservations/{id}/cancel` Cancelar reserva (gestor).
 
 ## Archivos .http para Visual Studio Code
 Se incluyen ejemplos listos para la extensión **REST Client**:
