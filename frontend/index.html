@@ -28,8 +28,14 @@
 
     <section id="adminSection" class="grid hidden">
         <div class="card">
-            <h3>Usuarios</h3>
-            <form id="userForm">
+            <div class="card-header">
+                <div>
+                    <p class="eyebrow">Administración</p>
+                    <h3>Usuarios</h3>
+                </div>
+                <button id="loadUsers" class="ghost">Actualizar lista</button>
+            </div>
+            <form id="userForm" class="stacked">
                 <input type="text" name="name" placeholder="Nombre" required />
                 <input type="email" name="email" placeholder="Email" required />
                 <input type="password" name="password" placeholder="Contraseña" required />
@@ -39,25 +45,59 @@
                 </select>
                 <button type="submit">Crear usuario</button>
             </form>
-            <button id="loadUsers">Actualizar lista</button>
-            <pre id="usersList"></pre>
+            <div class="table-wrapper">
+                <table id="usersTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Email</th>
+                            <th>Rol</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
         </div>
 
         <div class="card">
-            <h3>Naves</h3>
-            <form id="naveForm">
+            <div class="card-header">
+                <div>
+                    <p class="eyebrow">Administración</p>
+                    <h3>Naves</h3>
+                </div>
+                <button id="loadNaves" class="ghost">Ver naves</button>
+            </div>
+            <form id="naveForm" class="stacked">
                 <input type="text" name="name" placeholder="Nombre" required />
                 <input type="number" name="capacity" placeholder="Capacidad" required />
                 <input type="text" name="model" placeholder="Modelo" required />
                 <button type="submit">Registrar nave</button>
             </form>
-            <button id="loadNaves">Ver naves</button>
-            <pre id="navesList"></pre>
+            <div class="table-wrapper">
+                <table id="navesTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Capacidad</th>
+                            <th>Modelo</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
         </div>
 
         <div class="card">
-            <h3>Vuelos</h3>
-            <form id="flightForm">
+            <div class="card-header">
+                <div>
+                    <p class="eyebrow">Administración</p>
+                    <h3>Vuelos</h3>
+                </div>
+                <button id="loadFlights" class="ghost">Ver vuelos</button>
+            </div>
+            <form id="flightForm" class="stacked">
                 <input type="number" name="nave_id" placeholder="ID Nave" required />
                 <input type="text" name="origin" placeholder="Origen" required />
                 <input type="text" name="destination" placeholder="Destino" required />
@@ -66,32 +106,85 @@
                 <input type="number" name="price" placeholder="Precio" step="0.01" required />
                 <button type="submit">Registrar vuelo</button>
             </form>
-            <button id="loadFlights">Ver vuelos</button>
-            <pre id="flightsList"></pre>
+            <div class="table-wrapper">
+                <table id="flightsTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Origen</th>
+                            <th>Destino</th>
+                            <th>Salida</th>
+                            <th>Llegada</th>
+                            <th>Nave</th>
+                            <th>Precio</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
         </div>
     </section>
 
     <section id="gestorSection" class="grid hidden">
         <div class="card">
-            <h3>Buscar vuelos</h3>
-            <form id="searchForm">
+            <div class="card-header">
+                <div>
+                    <p class="eyebrow">Gestor</p>
+                    <h3>Buscar vuelos</h3>
+                </div>
+            </div>
+            <form id="searchForm" class="stacked">
                 <input type="text" name="origin" placeholder="Origen" />
                 <input type="text" name="destination" placeholder="Destino" />
                 <input type="date" name="date" />
                 <button type="submit">Buscar</button>
             </form>
-            <pre id="searchResults"></pre>
+            <div class="table-wrapper">
+                <table id="searchTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Origen</th>
+                            <th>Destino</th>
+                            <th>Salida</th>
+                            <th>Llegada</th>
+                            <th>Nave</th>
+                            <th>Precio</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
         </div>
 
         <div class="card">
-            <h3>Reservas</h3>
-            <form id="reservationForm">
+            <div class="card-header">
+                <div>
+                    <p class="eyebrow">Gestor</p>
+                    <h3>Reservas</h3>
+                </div>
+                <button id="loadReservations" class="ghost">Ver reservas</button>
+            </div>
+            <form id="reservationForm" class="stacked">
                 <input type="number" name="flight_id" placeholder="ID vuelo" required />
                 <input type="number" name="user_id" placeholder="ID usuario" />
                 <button type="submit">Crear reserva</button>
             </form>
-            <button id="loadReservations">Ver reservas</button>
-            <pre id="reservationsList"></pre>
+            <div class="table-wrapper">
+                <table id="reservationsTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Vuelo</th>
+                            <th>Origen</th>
+                            <th>Destino</th>
+                            <th>Salida</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
         </div>
     </section>
 

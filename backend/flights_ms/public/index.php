@@ -20,6 +20,11 @@ function json_response($data, int $status = 200): void
     exit;
 }
 
+function starts_with(string $haystack, string $needle): bool
+{
+    return substr($haystack, 0, strlen($needle)) === $needle;
+}
+
 function db(): PDO
 {
     static $pdo = null;
@@ -53,7 +58,7 @@ function get_json_input(): array
 function bearer_token(): ?string
 {
     $auth = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
-    if (str_starts_with($auth, 'Bearer ')) {
+    if (starts_with($auth, 'Bearer ')) {
         return substr($auth, 7);
     }
     return null;
@@ -86,9 +91,12 @@ function require_role(array $user, array $roles): void
 $method = $_SERVER['REQUEST_METHOD'];
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?: '/';
 $scriptDir = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/');
-if ($scriptDir && str_starts_with($path, $scriptDir)) {
+if ($scriptDir && starts_with($path, $scriptDir)) {
     $path = substr($path, strlen($scriptDir));
     if ($path === '') $path = '/';
+}
+if ($path !== '/' && substr($path, -1) === '/') {
+    $path = rtrim($path, '/');
 }
 
 if ($method === 'GET' && $path === '/') {
@@ -96,7 +104,7 @@ if ($method === 'GET' && $path === '/') {
 }
 
 // --- Naves (admin) ---
-if (str_starts_with($path, '/naves')) {
+if (starts_with($path, '/naves')) {
     $user = require_auth();
     require_role($user, ['administrador']);
 
@@ -135,8 +143,10 @@ if (str_starts_with($path, '/naves')) {
 }
 
 // --- Flights ---
-if (str_starts_with($path, '/flights')) {
+if (starts_with($path, '/flights')) {
     if ($method === 'GET' && $path === '/flights') {
+        $user = require_auth();
+        require_role($user, ['administrador', 'gestor']);
         $origin = $_GET['origin'] ?? null;
         $dest = $_GET['destination'] ?? null;
         $date = $_GET['date'] ?? null;
@@ -184,7 +194,7 @@ if (str_starts_with($path, '/flights')) {
 }
 
 // --- Reservations (gestor) ---
-if (str_starts_with($path, '/reservations')) {
+if (starts_with($path, '/reservations')) {
     $user=require_auth();
     require_role($user,['gestor']);
 

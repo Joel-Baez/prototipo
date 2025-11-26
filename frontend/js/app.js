@@ -35,6 +35,26 @@ const authHeaders = () => ({
     Authorization: `Bearer ${token()}`,
 });
 
+const renderTable = (tableId, data, columns) => {
+    const tbody = document.querySelector(`#${tableId} tbody`);
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    if (!data || data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="${columns.length}" class="empty">Sin datos</td></tr>`;
+        return;
+    }
+
+    data.forEach((item) => {
+        const tr = document.createElement('tr');
+        columns.forEach((key) => {
+            const td = document.createElement('td');
+            td.textContent = typeof key === 'function' ? key(item) : (item[key] ?? '');
+            tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+    });
+};
+
 const handleError = async (res) => {
     const payload = await res.json();
     alert(payload.error || 'Error en la solicitud');
@@ -54,6 +74,14 @@ loginForm.addEventListener('submit', async (e) => {
     localStorage.setItem('token', data.token);
     localStorage.setItem('role', data.role);
     toggleSections();
+    if (data.role === 'administrador') {
+        loadUsers();
+        loadNaves();
+        loadFlights();
+    }
+    if (['gestor', 'administrador'].includes(data.role)) {
+        loadReservations();
+    }
 });
 
 logoutBtn.addEventListener('click', async () => {
@@ -75,7 +103,6 @@ toggleSections();
 
 // Admin actions
 const userForm = document.getElementById('userForm');
-const usersList = document.getElementById('usersList');
 document.getElementById('loadUsers').addEventListener('click', loadUsers);
 userForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -94,11 +121,10 @@ async function loadUsers() {
     const res = await fetch(`${USERS_API}/users`, { headers: authHeaders() });
     if (!res.ok) return handleError(res);
     const data = await res.json();
-    usersList.textContent = JSON.stringify(data, null, 2);
+    renderTable('usersTable', data, ['id', 'name', 'email', 'role']);
 }
 
 const naveForm = document.getElementById('naveForm');
-const navesList = document.getElementById('navesList');
 document.getElementById('loadNaves').addEventListener('click', loadNaves);
 naveForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -118,11 +144,10 @@ async function loadNaves() {
     const res = await fetch(`${FLIGHTS_API}/naves`, { headers: authHeaders() });
     if (!res.ok) return handleError(res);
     const data = await res.json();
-    navesList.textContent = JSON.stringify(data, null, 2);
+    renderTable('navesTable', data, ['id', 'name', 'capacity', 'model']);
 }
 
 const flightForm = document.getElementById('flightForm');
-const flightsList = document.getElementById('flightsList');
 document.getElementById('loadFlights').addEventListener('click', loadFlights);
 flightForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -141,23 +166,37 @@ async function loadFlights() {
     const res = await fetch(`${FLIGHTS_API}/flights`, { headers: authHeaders() });
     if (!res.ok) return handleError(res);
     const data = await res.json();
-    flightsList.textContent = JSON.stringify(data, null, 2);
+    renderTable('flightsTable', data, [
+        'id',
+        'origin',
+        'destination',
+        (row) => row.departure?.replace('T', ' ') ?? row.departure,
+        (row) => row.arrival?.replace('T', ' ') ?? row.arrival,
+        'nave_name',
+        (row) => row.price,
+    ]);
 }
 
 // Gestor actions
 const searchForm = document.getElementById('searchForm');
-const searchResults = document.getElementById('searchResults');
 searchForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const params = new URLSearchParams(Object.fromEntries(new FormData(searchForm))).toString();
     const res = await fetch(`${FLIGHTS_API}/flights?${params}`, { headers: authHeaders() });
     if (!res.ok) return handleError(res);
     const data = await res.json();
-    searchResults.textContent = JSON.stringify(data, null, 2);
+    renderTable('searchTable', data, [
+        'id',
+        'origin',
+        'destination',
+        (row) => row.departure?.replace('T', ' ') ?? row.departure,
+        (row) => row.arrival?.replace('T', ' ') ?? row.arrival,
+        'nave_name',
+        (row) => row.price,
+    ]);
 });
 
 const reservationForm = document.getElementById('reservationForm');
-const reservationsList = document.getElementById('reservationsList');
 document.getElementById('loadReservations').addEventListener('click', loadReservations);
 reservationForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -176,5 +215,12 @@ async function loadReservations() {
     const res = await fetch(`${FLIGHTS_API}/reservations`, { headers: authHeaders() });
     if (!res.ok) return handleError(res);
     const data = await res.json();
-    reservationsList.textContent = JSON.stringify(data, null, 2);
+    renderTable('reservationsTable', data, [
+        'id',
+        'flight_id',
+        'origin',
+        'destination',
+        (row) => row.departure?.replace('T', ' ') ?? row.departure,
+        'status',
+    ]);
 }

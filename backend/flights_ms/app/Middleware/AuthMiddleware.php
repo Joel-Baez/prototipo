@@ -14,7 +14,7 @@ class AuthMiddleware implements MiddlewareInterface
     public function process(Request $request, RequestHandler $handler): Response
     {
         $authHeader = $request->getHeaderLine('Authorization');
-        if (!$authHeader || !str_starts_with($authHeader, 'Bearer ')) {
+        if (!$authHeader || substr($authHeader, 0, 7) !== 'Bearer ') {
             return $this->unauthorized('Token requerido');
         }
 

@@ -21,6 +21,11 @@ function json_response($data, int $status = 200): void
     exit;
 }
 
+function starts_with(string $haystack, string $needle): bool
+{
+    return substr($haystack, 0, strlen($needle)) === $needle;
+}
+
 function db(): PDO
 {
     static $pdo = null;
@@ -57,7 +62,7 @@ function get_json_input(): array
 function bearer_token(): ?string
 {
     $auth = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
-    if (str_starts_with($auth, 'Bearer ')) {
+    if (starts_with($auth, 'Bearer ')) {
         return substr($auth, 7);
     }
     return null;
@@ -92,11 +97,14 @@ function require_role(array $user, array $roles): void
 $method = $_SERVER['REQUEST_METHOD'];
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?: '/';
 
-// Normalizar base path cuando se sirve desde subcarpetas
+// Normalizar base path cuando se sirve desde subcarpetas y permitir la barra final
 $scriptDir = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/');
-if ($scriptDir && str_starts_with($path, $scriptDir)) {
+if ($scriptDir && starts_with($path, $scriptDir)) {
     $path = substr($path, strlen($scriptDir));
     if ($path === '') $path = '/';
+}
+if ($path !== '/' && substr($path, -1) === '/') {
+    $path = rtrim($path, '/');
 }
 
 // Rutas
@@ -147,7 +155,7 @@ if ($method === 'GET' && $path === '/me') {
 }
 
 // Rutas de administración
-if (str_starts_with($path, '/users')) {
+if (starts_with($path, '/users')) {
     $user = require_auth();
     require_role($user, ['administrador']);
 
