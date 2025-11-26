@@ -38,7 +38,7 @@ Sigue los pasos estándar de Slim + Composer (idénticos a la guía compartida):
 
 ## Endpoints principales
 ### users_ms
-- `POST /login` Iniciar sesión y obtener token.
+- `POST /login` Iniciar sesión y obtener token. Acepta tanto `email/password` (formulario actual) como los campos `user/pwd` usados en el ejemplo del profesor.
 - `POST /logout` Cerrar sesión (requiere token).
 - `GET /me` Perfil actual (requiere token).
 - `POST /users` Crear usuario (solo administrador).

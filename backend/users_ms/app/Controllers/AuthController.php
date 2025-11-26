@@ -11,8 +11,9 @@ class AuthController
     public function login(Request $request, Response $response): Response
     {
         $data = $request->getParsedBody();
-        $email = $data['email'] ?? '';
-        $password = $data['password'] ?? '';
+        // Permitir los nombres de campos del ejemplo del profesor (user/pwd) además de email/password
+        $email = $data['email'] ?? $data['user'] ?? '';
+        $password = $data['password'] ?? $data['pwd'] ?? '';
 
         $user = User::where('email', $email)->first();
         if (!$user || (!password_verify($password, $user->password) && $user->password !== $password)) {

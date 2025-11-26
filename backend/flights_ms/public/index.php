@@ -12,6 +12,8 @@ use Slim\Factory\AppFactory;
 require __DIR__ . '/../app/bootstrap.php';
 
 $app = AppFactory::create();
+$scriptName = rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'])), '/');
+$app->setBasePath($scriptName === '' ? '/' : $scriptName);
 
 // CORS debe aplicarse siempre, incluso cuando haya errores o middleware posteriores
 $app->options('/{routes:.+}', fn (Request $req, Response $res) => $res);
