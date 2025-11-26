@@ -91,7 +91,7 @@ const handleError = async (res) => {
         // Ignorar si la respuesta no tiene cuerpo JSON
     }
     if (res.status === 401) {
-        localStorage.clear();
+        storage.clear();
         toggleSections();
     }
     alert(payload.error || `Error (${res.status}) en la solicitud`);
@@ -108,6 +108,7 @@ loginForm.addEventListener('submit', async (e) => {
 
     if (!res.ok) return handleError(res);
     const data = await res.json();
+    storage.clear();
     storage.setItem('token', data.token);
     storage.setItem('role', data.role);
     toggleSections();
@@ -140,6 +141,29 @@ function toggleSections() {
 }
 
 toggleSections();
+
+// Validar sesión previa y restaurar el rol/token si el backend confirma el token
+async function restoreSession() {
+    if (!token()) return;
+    const res = await fetch(`${USERS_API}/me`, { headers: authHeaders() });
+    if (!res.ok) {
+        storage.clear();
+        toggleSections();
+        return;
+    }
+    const data = await res.json();
+    storage.setItem('role', data.role);
+    toggleSections();
+    if (data.role === 'administrador') {
+        loadUsers();
+        loadNaves();
+        loadFlights();
+    }
+    if (data.role === 'gestor') {
+        loadFlights();
+        loadReservations();
+    }
+}
 
 // Admin actions
 const userForm = document.getElementById('userForm');
@@ -426,3 +450,5 @@ async function cancelReservation(id) {
     if (!res.ok) return handleError(res);
     loadReservations();
 }
+
+restoreSession();
