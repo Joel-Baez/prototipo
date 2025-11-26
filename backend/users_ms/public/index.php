@@ -9,17 +9,14 @@ use Slim\Factory\AppFactory;
 require __DIR__ . '/../app/bootstrap.php';
 
 $app = AppFactory::create();
-$app->addBodyParsingMiddleware();
-$app->addRoutingMiddleware();
-$app->addErrorMiddleware(true, false, false);
 
-// CORS global
+// CORS debe aplicarse siempre, incluso cuando haya errores o middleware posteriores
 $app->options('/{routes:.+}', fn ($req, $res) => $res);
 $app->add(function ($request, $handler) {
-    $origin = $request->getHeaderLine('Origin') ?: '*';
     $response = $handler->handle($request);
+
     $response = $response
-        ->withHeader('Access-Control-Allow-Origin', $origin)
+        ->withHeader('Access-Control-Allow-Origin', '*')
         ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization')
         ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
         ->withHeader('Access-Control-Allow-Credentials', 'true');
@@ -30,6 +27,10 @@ $app->add(function ($request, $handler) {
 
     return $response;
 });
+
+$app->addBodyParsingMiddleware();
+$app->addRoutingMiddleware();
+$app->addErrorMiddleware(true, true, true);
 
 $app->get('/', function () {
     return json_encode(['service' => 'users_ms', 'status' => 'ok']);
