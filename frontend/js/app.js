@@ -5,8 +5,21 @@ const projectRoot = window.location.pathname.includes('/frontend')
     : '';
 const BASE_URL = `${window.location.origin}${projectRoot}`;
 
-const USERS_API = `${BASE_URL}/backend/users_ms/public`;
-const FLIGHTS_API = `${BASE_URL}/backend/flights_ms/public`;
+// Allow overrides via query params when microservices run on different ports (ej. php -S -t public)
+const params = new URLSearchParams(window.location.search);
+const usersApiOverride = params.get('usersApi');
+const flightsApiOverride = params.get('flightsApi');
+
+// If the frontend is running on a dev port (8000, 3000, 5173), assume microservices on 8001/8002.
+const devPorts = ['8000', '3000', '5173'];
+const isDevPort = devPorts.includes(window.location.port);
+const guessedUsersApi = `${window.location.protocol}//${window.location.hostname}:8001`;
+const guessedFlightsApi = `${window.location.protocol}//${window.location.hostname}:8002`;
+
+const USERS_API = (usersApiOverride
+    || (isDevPort ? guessedUsersApi : `${BASE_URL}/backend/users_ms/public`)).replace(/\/$/, '');
+const FLIGHTS_API = (flightsApiOverride
+    || (isDevPort ? guessedFlightsApi : `${BASE_URL}/backend/flights_ms/public`)).replace(/\/$/, '');
 
 const loginForm = document.getElementById('loginForm');
 const logoutBtn = document.getElementById('logoutBtn');

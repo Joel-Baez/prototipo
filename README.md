@@ -147,6 +147,10 @@ Cada microservicio responde en JSON y valida el token en las rutas protegidas.
 6. **Probar endpoints protegidos**:
    - Con token de **administrador** prueba usuarios, vuelos y naves.
    - Con token de **gestor** prueba creación/listado/cancelación de reservas.
-7. **Frontend**: si prefieres interfaz visual, sirve `frontend/` (por ejemplo `php -S 127.0.0.1:8000 -t frontend`) y usa las mismas credenciales; el token se guarda en `localStorage` y se envía en cada llamada.
+7. **Frontend**: si prefieres interfaz visual, sirve `frontend/` (por ejemplo `php -S 127.0.0.1:8000 -t frontend`). El frontend detecta:
+   - Si se abre desde `127.0.0.1:8000` o `localhost:8000`, consumirá automáticamente `127.0.0.1:8001` y `127.0.0.1:8002`.
+   - Si se abre desde Apache (`http://localhost/prototipo/frontend/`), usará los microservicios en la misma raíz `backend/users_ms/public` y `backend/flights_ms/public`.
+   - También puedes forzar URLs con query params, por ejemplo: `http://127.0.0.1:8000/?usersApi=http://127.0.0.1:8001&flightsApi=http://127.0.0.1:8002`.
+   Usa las mismas credenciales; el token se guarda en `localStorage` y se envía en cada llamada.
 
 Si recibes 401 en rutas protegidas, revisa que el header `Authorization: Bearer <token>` se envía y que el token existe en la tabla `users`.
