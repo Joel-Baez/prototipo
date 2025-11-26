@@ -102,6 +102,18 @@ Abrir `frontend/index.html` desde el servidor web. El token se almacena en `loca
 
 Cada microservicio responde en JSON y valida el token en las rutas protegidas.
 
+### ¿Qué hago al llevarlo a otro equipo?
+1) **Clona o copia toda la carpeta del proyecto** (incluye `composer.json` y `composer.lock` de cada microservicio).
+2) **Elimina solo la carpeta `vendor/` si viene del otro equipo**; no elimines los archivos de Composer.
+3) En el nuevo equipo, ejecuta `composer install` dentro de `backend/users_ms` y `backend/flights_ms` para reconstruir `vendor/` con las versiones bloqueadas en `composer.lock`.
+4) Copia los entornos desde los ejemplos:
+   ```bash
+   cp backend/users_ms/.env.example backend/users_ms/.env
+   cp backend/flights_ms/.env.example backend/flights_ms/.env
+   ```
+   Ajusta credenciales según el MySQL local.
+5) Activa Apache/MySQL y prueba las URLs indicadas arriba o levanta con `php -S` si usas el servidor embebido.
+
 ## Paso a paso para probar los microservicios (local/VS Code REST Client)
 1. **Crear la base de datos** en MySQL con el SQL entregado en el enunciado (asegúrate de crear la base `vuelos_app`).
 2. **Instalar dependencias** (una vez por microservicio):
