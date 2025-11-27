@@ -30,8 +30,9 @@ const USERS_API = (usersApiOverride
 const FLIGHTS_API = (flightsApiOverride
     || (isDevPort ? guessedFlightsApi : `${BASE_URL}/backend/flights_ms/public`)).replace(/\/$/, '');
 
+// Mostrar solo un estado resumido (sin rutas completas) para mayor claridad en UI
 if (endpointsInfo) {
-    endpointsInfo.textContent = `Usuarios: ${USERS_API} | Vuelos: ${FLIGHTS_API}`;
+    endpointsInfo.textContent = 'APIs listas (usuarios y vuelos)';
 }
 
 // Preferimos sessionStorage para que el token se mantenga solo durante la sesión activa
@@ -139,6 +140,7 @@ loginForm.addEventListener('submit', async (e) => {
     }
     if (data.role === 'gestor') {
         loadReservations();
+        loadSearchFlights();
     }
 });
 
@@ -185,6 +187,7 @@ async function restoreSession() {
     if (data.role === 'gestor') {
         loadFlights();
         loadReservations();
+        loadSearchFlights();
     }
 }
 
@@ -406,10 +409,10 @@ async function deleteFlight(id) {
 
 // Gestor actions
 const searchForm = document.getElementById('searchForm');
-searchForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const params = new URLSearchParams(Object.fromEntries(new FormData(searchForm))).toString();
-    const res = await fetch(`${FLIGHTS_API}/flights?${params}`, { headers: authHeaders() });
+async function loadSearchFlights(formData = null) {
+    const params = formData ? new URLSearchParams(formData).toString() : '';
+    const url = params ? `${FLIGHTS_API}/flights?${params}` : `${FLIGHTS_API}/flights`;
+    const res = await fetch(url, { headers: authHeaders() });
     if (!res.ok) return handleError(res);
     const data = await res.json();
     renderTable('searchTable', data, [
@@ -421,6 +424,19 @@ searchForm.addEventListener('submit', async (e) => {
         'nave_name',
         (row) => row.price,
     ]);
+}
+
+searchForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const sanitized = Object.fromEntries(
+        Array.from(new FormData(searchForm)).map(([k, v]) => [k, v.trim()])
+    );
+    // Convertir fechas al formato esperado YYYY-MM-DD
+    if (sanitized.date && sanitized.date.includes('/')) {
+        const [d, m, y] = sanitized.date.split('/');
+        sanitized.date = `${y}-${m}-${d}`;
+    }
+    await loadSearchFlights(sanitized);
 });
 
 const reservationForm = document.getElementById('reservationForm');
