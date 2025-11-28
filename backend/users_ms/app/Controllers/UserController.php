@@ -8,7 +8,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 
 class UserController
 {
-    public function register(Request $request, Response $response): Response
+    public function store(Request $request, Response $response): Response
     {
         $data = $request->getParsedBody();
         $user = User::create([
@@ -22,7 +22,7 @@ class UserController
         return $response->withHeader('Content-Type', 'application/json')->withStatus(201);
     }
 
-    public function index(Response $response): Response
+    public function index(Request $request, Response $response): Response
     {
         $users = User::all(['id', 'name', 'email', 'role', 'token']);
         $response->getBody()->write(json_encode(['users' => $users]));

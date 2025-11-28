@@ -9,14 +9,14 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 
 class ReservationController
 {
-    public function index(Response $response): Response
+    public function index(Request $request, Response $response): Response
     {
         $reservations = Reservation::with('flight')->get();
         $response->getBody()->write(json_encode(['reservations' => $reservations]));
         return $response->withHeader('Content-Type', 'application/json');
     }
 
-    public function byUser(Response $response, array $args): Response
+    public function byUser(Request $request, Response $response, array $args): Response
     {
         $reservations = Reservation::where('user_id', $args['userId'])->with('flight')->get();
         $response->getBody()->write(json_encode(['reservations' => $reservations]));
@@ -42,7 +42,7 @@ class ReservationController
         return $response->withHeader('Content-Type', 'application/json')->withStatus(201);
     }
 
-    public function cancel(Response $response, array $args): Response
+    public function cancel(Request $request, Response $response, array $args): Response
     {
         $reservation = Reservation::find($args['id']);
         if (!$reservation) {

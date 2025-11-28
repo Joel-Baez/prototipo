@@ -8,7 +8,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 
 class NaveController
 {
-    public function index(Response $response): Response
+    public function index(Request $request, Response $response): Response
     {
         $response->getBody()->write(json_encode(['naves' => Nave::all()]));
         return $response->withHeader('Content-Type', 'application/json');
@@ -37,7 +37,7 @@ class NaveController
         return $response->withHeader('Content-Type', 'application/json');
     }
 
-    public function delete(Response $response, array $args): Response
+    public function delete(Request $request, Response $response, array $args): Response
     {
         $nave = Nave::find($args['id']);
         if (!$nave) {

@@ -2,7 +2,7 @@
 
 Proyecto con dos microservicios en `backend/users_ms` (usuarios/autenticación) y `backend/flights_ms` (vuelos, naves y reservas) más un frontend HTML/CSS/JS en `frontend`.
 
-- No se incluye `vendor/` ni archivos de Composer. Sigue los pasos de instalación para generar todo localmente.
+- Los `composer.json` ya están en `backend/users_ms` y `backend/flights_ms`; ejecuta los comandos de Composer para descargar las dependencias.
 - Las conexiones a MySQL se configuran directamente en `app/Config/database.php` (puedes ajustar host/usuario/clave allí o mediante variables de entorno estándar: `DB_HOST`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`).
 
 ## Requisitos

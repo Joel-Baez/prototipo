@@ -9,7 +9,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 
 class FlightController
 {
-    public function index(Response $response): Response
+    public function index(Request $request, Response $response): Response
     {
         $flights = Flight::with('nave')->get();
         $response->getBody()->write(json_encode(['flights' => $flights]));
@@ -71,7 +71,7 @@ class FlightController
         return $response->withHeader('Content-Type', 'application/json');
     }
 
-    public function delete(Response $response, array $args): Response
+    public function delete(Request $request, Response $response, array $args): Response
     {
         $flight = Flight::find($args['id']);
         if (!$flight) {
