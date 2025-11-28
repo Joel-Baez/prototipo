@@ -5,12 +5,12 @@ const projectRoot = window.location.pathname.includes('/frontend')
     : '';
 const BASE_URL = `${window.location.origin}${projectRoot}`;
 
-// Allow overrides via query params when microservices run on different ports (ej. php -S -t public)
+// Allow overrides via query params when microservicios run on different ports (ej. php -S -t public)
 const params = new URLSearchParams(window.location.search);
 const usersApiOverride = params.get('usersApi');
 const flightsApiOverride = params.get('flightsApi');
 
-// If the frontend is running on a dev port (8000, 3000, 5173), assume microservices on 8001/8002.
+// If the frontend is running on a dev port (8000, 3000, 5173), assume microservicios on 8001/8002.
 const devPorts = ['8000', '3000', '5173'];
 const isDevPort = devPorts.includes(window.location.port);
 const guessedUsersApi = `${window.location.protocol}//${window.location.hostname}:8001`;
@@ -25,15 +25,53 @@ const toast = document.getElementById('toast');
 const roleBadge = document.getElementById('roleBadge');
 const endpointsInfo = document.getElementById('endpointsInfo');
 
-const USERS_API = (usersApiOverride
-    || (isDevPort ? guessedUsersApi : `${BASE_URL}/backend/users_ms/public`)).replace(/\/$/, '');
-const FLIGHTS_API = (flightsApiOverride
-    || (isDevPort ? guessedFlightsApi : `${BASE_URL}/backend/flights_ms/public`)).replace(/\/$/, '');
+let USERS_API = '';
+let FLIGHTS_API = '';
 
-// Mostrar solo un estado resumido (sin rutas completas) para mayor claridad en UI
-if (endpointsInfo) {
-    endpointsInfo.textContent = 'APIs listas (usuarios y vuelos)';
+const candidates = (override, defaultPath, guessed) =>
+    [override, defaultPath, guessed].filter(Boolean).map((c) => c.replace(/\/$/, ''));
+
+const usersApiCandidates = candidates(
+    usersApiOverride,
+    `${BASE_URL}/backend/users_ms/public`,
+    guessedUsersApi,
+);
+const flightsApiCandidates = candidates(
+    flightsApiOverride,
+    `${BASE_URL}/backend/flights_ms/public`,
+    guessedFlightsApi,
+);
+
+// Valores iniciales mientras se resuelve el endpoint activo
+USERS_API = usersApiCandidates[0];
+FLIGHTS_API = flightsApiCandidates[0];
+
+async function pickApi(baseList, healthPath = '/') {
+    for (const base of baseList) {
+        let timeout;
+        try {
+            const controller = new AbortController();
+            timeout = setTimeout(() => controller.abort(), 1200);
+            const res = await fetch(`${base}${healthPath}`, { signal: controller.signal });
+            if (res.ok) return base;
+        } catch (err) {
+            // Ignorar y probar siguiente opción
+        } finally {
+            clearTimeout(timeout);
+        }
+    }
+    return baseList[0];
 }
+
+async function resolveApis() {
+    USERS_API = await pickApi(usersApiCandidates, '/');
+    FLIGHTS_API = await pickApi(flightsApiCandidates, '/');
+    if (endpointsInfo) {
+        endpointsInfo.textContent = 'APIs listas';
+    }
+}
+
+const apisReady = resolveApis();
 
 // Preferimos sessionStorage para que el token se mantenga solo durante la sesión activa
 const storage = window.sessionStorage;
@@ -117,6 +155,7 @@ const handleError = async (res) => {
 
 loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
+    await apisReady;
     const body = Object.fromEntries(new FormData(loginForm));
     const res = await fetch(`${USERS_API}/login`, {
         method: 'POST',
@@ -145,6 +184,7 @@ loginForm.addEventListener('submit', async (e) => {
 });
 
 logoutBtn.addEventListener('click', async () => {
+    await apisReady;
     if (!token()) return;
     await fetch(`${USERS_API}/logout`, { method: 'POST', headers: authHeaders() });
     storage.clear();
@@ -490,4 +530,4 @@ async function cancelReservation(id) {
     loadReservations();
 }
 
-restoreSession();
+apisReady.then(() => restoreSession());
