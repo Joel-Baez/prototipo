@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gestión de Vuelos</title>
+    <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+    <header>
+        <h1>Gestión de Vuelos - Microservicios</h1>
+        <div class="status-bar">
+            <span class="pill" id="roleBadge">Sesión no iniciada</span>
+            <span class="pill" id="endpointsInfo">Backend listo</span>
+            <button id="logoutBtn" class="hidden">Cerrar sesión</button>
+        </div>
+    </header>
+
+    <div id="toast" class="toast hidden"></div>
+
+    <section id="loginSection" class="card">
+        <h2>Inicio de sesión</h2>
+        <form id="loginForm">
+            <label>Correo
+                <input type="email" name="email" required />
+            </label>
+            <label>Contraseña
+                <input type="password" name="password" required />
+            </label>
+            <button type="submit">Ingresar</button>
+        </form>
+        <p class="note">Usa los usuarios de prueba: admin@system.com / admin123 o gestor@system.com / gestor123</p>
+    </section>
+
+    <section id="adminSection" class="grid hidden">
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <p class="eyebrow">Administración</p>
+                    <h3>Usuarios</h3>
+                </div>
+                <button id="loadUsers" class="ghost">Actualizar lista</button>
+            </div>
+            <form id="userForm" class="stacked">
+                <input type="text" name="name" placeholder="Nombre" required />
+                <input type="email" name="email" placeholder="Email" required />
+                <input type="password" name="password" placeholder="Contraseña" required />
+                <select name="role">
+                    <option value="gestor">Gestor</option>
+                    <option value="administrador">Administrador</option>
+                </select>
+                <button type="submit">Crear usuario</button>
+            </form>
+            <div class="table-wrapper">
+                <table id="usersTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Email</th>
+                            <th>Rol</th>
+                            <th class="actions">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <p class="eyebrow">Administración</p>
+                    <h3>Naves</h3>
+                </div>
+                <button id="loadNaves" class="ghost">Ver naves</button>
+            </div>
+            <form id="naveForm" class="stacked">
+                <input type="text" name="name" placeholder="Nombre" required />
+                <input type="number" name="capacity" placeholder="Capacidad" required />
+                <input type="text" name="model" placeholder="Modelo" required />
+                <button type="submit">Registrar nave</button>
+            </form>
+            <div class="table-wrapper">
+                <table id="navesTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Capacidad</th>
+                            <th>Modelo</th>
+                            <th class="actions">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <p class="eyebrow">Administración</p>
+                    <h3>Vuelos</h3>
+                </div>
+                <button id="loadFlights" class="ghost">Ver vuelos</button>
+            </div>
+            <form id="flightForm" class="stacked">
+                <input type="number" name="nave_id" placeholder="ID Nave" required />
+                <input type="text" name="origin" placeholder="Origen" required />
+                <input type="text" name="destination" placeholder="Destino" required />
+                <input type="datetime-local" name="departure" required />
+                <input type="datetime-local" name="arrival" required />
+                <input type="number" name="price" placeholder="Precio" step="0.01" required />
+                <button type="submit">Registrar vuelo</button>
+            </form>
+            <div class="table-wrapper">
+                <table id="flightsTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Origen</th>
+                            <th>Destino</th>
+                            <th>Salida</th>
+                            <th>Llegada</th>
+                            <th>Nave</th>
+                            <th>Precio</th>
+                            <th class="actions">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <section id="gestorSection" class="grid hidden">
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <p class="eyebrow">Gestor</p>
+                    <h3>Buscar vuelos</h3>
+                </div>
+            </div>
+            <form id="searchForm" class="stacked">
+                <input type="text" name="origin" placeholder="Origen (ej. Bogotá)" />
+                <input type="text" name="destination" placeholder="Destino (ej. Medellín)" />
+                <input type="date" name="date" placeholder="AAAA-MM-DD" />
+                <button type="submit">Buscar</button>
+            </form>
+            <div class="table-wrapper">
+                <table id="searchTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Origen</th>
+                            <th>Destino</th>
+                            <th>Salida</th>
+                            <th>Llegada</th>
+                            <th>Nave</th>
+                            <th>Precio</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <p class="eyebrow">Gestor</p>
+                        <h3>Reservas</h3>
+                    </div>
+                    <div class="inline-controls">
+                        <input type="number" id="reservationsUserFilter" placeholder="Filtrar por ID de usuario" />
+                        <button id="loadReservations" class="ghost">Ver reservas</button>
+                    </div>
+                </div>
+                <form id="reservationForm" class="stacked">
+                    <input type="number" name="flight_id" placeholder="ID vuelo" required />
+                    <input type="number" name="user_id" placeholder="ID usuario" />
+                    <button type="submit">Crear reserva</button>
+            </form>
+            <div class="table-wrapper">
+                <table id="reservationsTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Vuelo</th>
+                            <th>Origen</th>
+                            <th>Destino</th>
+                            <th>Salida</th>
+                            <th>Estado</th>
+                            <th class="actions">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

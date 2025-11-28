@@ -1,0 +1,53 @@
+@baseUrl = http://localhost/prototipo/backend/users_ms/public
+@token = {{token}}
+
+### Login (público)
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "admin@system.com",
+  "password": "admin123"
+}
+
+### Perfil autenticado
+GET {{baseUrl}}/me
+Authorization: Bearer {{token}}
+
+### Crear usuario (solo administrador)
+POST {{baseUrl}}/users
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Nuevo Gestor",
+  "email": "nuevo@system.com",
+  "password": "clave123",
+  "role": "gestor"
+}
+
+### Listar usuarios (solo administrador)
+GET {{baseUrl}}/users
+Authorization: Bearer {{token}}
+
+### Actualizar usuario (solo administrador)
+PUT {{baseUrl}}/users/2
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Gestor Actualizado"
+}
+
+### Cambiar rol (solo administrador)
+PUT {{baseUrl}}/users/2/role
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "role": "administrador"
+}
+
+### Logout
+POST {{baseUrl}}/logout
+Authorization: Bearer {{token}}
