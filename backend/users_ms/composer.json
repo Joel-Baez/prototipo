@@ -1,14 +1,13 @@
 {
-    "name": "prototipo/users-ms",
     "require": {
-        "slim/slim": "^4.13",
-        "slim/psr7": "^1.6",
-        "illuminate/database": "^10.0",
-        "vlucas/phpdotenv": "^5.6"
-    },
+        "slim/slim": "4.*",
+        "slim/psr7": "^1.8",
+        "illuminate/database": "^12.40"
+    }, 
     "autoload": {
-        "psr-4": {
-            "App\\": "app/"
-        }
+    "psr-4": {
+        "App\\": "app/"
     }
+}
+
 }
