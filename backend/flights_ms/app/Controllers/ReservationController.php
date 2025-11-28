@@ -26,6 +26,10 @@ class ReservationController
     public function store(Request $request, Response $response): Response
     {
         $data = $request->getParsedBody();
+        if (empty($data['flight_id'])) {
+            $response->getBody()->write(json_encode(jsonError('El vuelo es obligatorio', 400)));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+        }
         $flight = Flight::find($data['flight_id'] ?? 0);
         if (!$flight) {
             $response->getBody()->write(json_encode(jsonError('Vuelo no encontrado', 404)));

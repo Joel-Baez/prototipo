@@ -11,6 +11,11 @@ class UserController
     public function store(Request $request, Response $response): Response
     {
         $data = $request->getParsedBody();
+        if (empty($data['name']) || empty($data['email']) || empty($data['password'])) {
+            $response->getBody()->write(json_encode(jsonError('Nombre, correo y contraseña son obligatorios', 400)));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+        }
+
         $user = User::create([
             'name' => $data['name'] ?? '',
             'email' => $data['email'] ?? '',
@@ -38,6 +43,10 @@ class UserController
         }
 
         $data = $request->getParsedBody();
+        if (isset($data['email']) && empty($data['email'])) {
+            $response->getBody()->write(json_encode(jsonError('El correo no puede estar vacío', 400)));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+        }
         if (!empty($data['password'])) {
             $data['password'] = password_hash($data['password'], PASSWORD_BCRYPT);
         } else {

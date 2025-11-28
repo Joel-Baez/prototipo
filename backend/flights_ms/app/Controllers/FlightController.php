@@ -39,6 +39,13 @@ class FlightController
     public function store(Request $request, Response $response): Response
     {
         $data = $request->getParsedBody();
+        $required = ['nave_id', 'origin', 'destination', 'departure', 'arrival', 'price'];
+        foreach ($required as $field) {
+            if (empty($data[$field])) {
+                $response->getBody()->write(json_encode(jsonError('Campos obligatorios: nave_id, origin, destination, departure, arrival, price', 400)));
+                return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+            }
+        }
         $nave = Nave::find($data['nave_id'] ?? 0);
         if (!$nave) {
             $response->getBody()->write(json_encode(jsonError('Nave no encontrada', 404)));
@@ -59,6 +66,10 @@ class FlightController
         }
 
         $data = $request->getParsedBody();
+        if (isset($data['nave_id']) && empty($data['nave_id'])) {
+            $response->getBody()->write(json_encode(jsonError('La nave es obligatoria', 400)));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+        }
         if (isset($data['nave_id']) && !Nave::find($data['nave_id'])) {
             $response->getBody()->write(json_encode(jsonError('Nave no encontrada', 404)));
             return $response->withHeader('Content-Type', 'application/json')->withStatus(404);

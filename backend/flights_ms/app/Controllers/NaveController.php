@@ -17,6 +17,10 @@ class NaveController
     public function store(Request $request, Response $response): Response
     {
         $data = $request->getParsedBody();
+        if (empty($data['name']) || empty($data['capacity']) || empty($data['model'])) {
+            $response->getBody()->write(json_encode(jsonError('Nombre, capacidad y modelo son obligatorios', 400)));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+        }
         $nave = Nave::create($data);
         $response->getBody()->write(json_encode(['nave' => $nave]));
         return $response->withHeader('Content-Type', 'application/json')->withStatus(201);
@@ -30,7 +34,13 @@ class NaveController
             return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
         }
 
-        $nave->fill($request->getParsedBody());
+        $payload = $request->getParsedBody();
+        if (isset($payload['name']) && $payload['name'] === '') {
+            $response->getBody()->write(json_encode(jsonError('El nombre no puede estar vacío', 400)));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+        }
+
+        $nave->fill($payload);
         $nave->save();
 
         $response->getBody()->write(json_encode(['nave' => $nave]));

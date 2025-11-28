@@ -15,6 +15,11 @@ class AuthController
         $email = $data['email'] ?? $data['user'] ?? '';
         $password = $data['password'] ?? $data['pwd'] ?? '';
 
+        if (!$email || !$password) {
+            $response->getBody()->write(json_encode(jsonError('Email y contraseña son obligatorios', 400)));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+        }
+
         $user = User::where('email', $email)->first();
         if (!$user || (!password_verify($password, $user->password) && $user->password !== $password)) {
             $response->getBody()->write(json_encode(['error' => 'Credenciales inválidas']));
