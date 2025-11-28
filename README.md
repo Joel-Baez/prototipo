@@ -1,1 +1,150 @@
-# prototipo
+# Sistema de Vuelos y Reservas (Microservicios PHP)
+
+Aplicación de ejemplo organizada en dos microservicios (`backend/users_ms` y `backend/flights_ms`).
+Los microservicios se ejecutan con Slim 4 + Eloquent; necesitas instalar dependencias con Composer antes de levantar los servidores PHP.
+
+## Microservicios incluidos
+- **users_ms** (`backend/users_ms`): autenticación y gestión de usuarios/roles.
+- **flights_ms** (`backend/flights_ms`): administración de naves y vuelos (administrador) y reservas (gestor).
+
+> Solo debe existir la carpeta `backend/` para los microservicios. Si quedó una carpeta vieja llamada `services/` (de alguna
+> iteración anterior), elimínala para evitar duplicados o rutas rotas.
+
+El frontend es HTML/CSS/JS puro y consume directamente los endpoints REST.
+
+## Requisitos
+- PHP 8 (compatible con XAMPP). Composer es opcional: solo lo necesitas si deseas reinstalar Slim/Eloquent; la versión incluida funciona sin `vendor/`.
+- MySQL con la base de datos `vuelos_app` creada a partir del script proporcionado.
+- Servidor web apuntando a `backend/users_ms/public` y `backend/flights_ms/public` (por ejemplo, alias virtual en XAMPP) y la carpeta `frontend` para los archivos estáticos.
+
+## Instalación rápida (Composer + Slim/Eloquent)
+1. Clona o copia la carpeta en `htdocs` (por ejemplo `C:\xampp\htdocs\prototipo`).
+2. Configura tu base de datos MySQL con el script `vuelos_app` proporcionado.
+3. Instala dependencias en cada microservicio:
+   ```bash
+   cd backend/users_ms && composer install
+   cd ../flights_ms && composer install
+   ```
+4. Arranca cada microservicio con PHP embebido (o Apache apuntando a `public/`):
+   ```bash
+   cd backend/users_ms && php -S 127.0.0.1:8001 -t public
+   cd backend/flights_ms && php -S 127.0.0.1:8002 -t public
+   ```
+5. Abre el frontend: `php -S 127.0.0.1:8000 -t frontend` o `http://localhost/prototipo/frontend/` en Apache. El frontend detecta las URLs de los microservicios automáticamente.
+
+## Endpoints principales
+### users_ms (Slim + Eloquent)
+- `POST /login` Iniciar sesión y obtener token. Acepta `email/password` o `user/pwd`.
+- `POST /logout` Cerrar sesión (requiere token).
+- `GET /me` Perfil actual (requiere token).
+- `POST /users` Crear usuario (solo administrador).
+- `GET /users` Listar usuarios (solo administrador).
+- `PUT /users/{id}` Actualizar datos (solo administrador).
+- `PUT /users/{id}/role` Cambiar rol (solo administrador).
+
+### flights_ms (Slim + Eloquent)
+- `GET /flights` Listar o buscar vuelos por `origin`, `destination` o `date` (parámetros de query). No requiere rol.
+- `POST /flights` Crear vuelo (administrador).
+- `PUT /flights/{id}` Actualizar vuelo (administrador).
+- `DELETE /flights/{id}` Eliminar vuelo (administrador).
+- `GET /naves` Listar naves (administrador).
+- `POST /naves` Crear nave (administrador).
+- `PUT /naves/{id}` Actualizar nave (administrador).
+- `DELETE /naves/{id}` Eliminar nave (administrador).
+- `GET /reservations` Listar reservas (gestor).
+- `POST /reservations` Crear reserva (gestor).
+- `PUT /reservations/{id}/cancel` Cancelar reserva (gestor).
+
+## Archivos .http para Visual Studio Code
+Se incluyen ejemplos listos para la extensión **REST Client**:
+
+- `user-ms.http`: login, perfil y endpoints de usuarios.
+- `flights-ms.http`: vuelos, naves y reservas.
+
+Actualiza la variable `@token` con el valor devuelto por `/login` y ajusta `@baseUrl` si cambias el host o alias.
+
+## Frontend
+Abrir `frontend/index.html` desde el servidor web. El token se almacena en `sessionStorage` (por sesión del navegador) y se envía en el header `Authorization: Bearer <token>`.
+
+- Usa las credenciales de prueba `admin@system.com / admin123` y `gestor@system.com / gestor123` (según el SQL suministrado).
+- Las secciones de administración y gestor se muestran según el rol devuelto por `/login`.
+
+## Puesta en marcha en XAMPP (Apache + MySQL)
+1. **Ubica el proyecto en `htdocs`** (por ejemplo `C:\xampp\htdocs\prototipo`).
+2. **Instala dependencias por microservicio** desde la consola de XAMPP/PowerShell:
+   ```bash
+   cd C:\xampp\htdocs\prototipo\backend\users_ms
+   composer install
+
+   cd ..\flights_ms
+   composer install
+   ```
+   > Esto descarga la carpeta `vendor` que faltaba para ejecutar Slim y Eloquent.
+3. **Copia los entornos** y coloca tus credenciales de MySQL:
+   ```bash
+   copy C:\xampp\htdocs\prototipo\backend\users_ms\.env.example C:\xampp\htdocs\prototipo\backend\users_ms\.env
+   copy C:\xampp\htdocs\prototipo\backend\flights_ms\.env.example C:\xampp\htdocs\prototipo\backend\flights_ms\.env
+   ```
+   Ajusta `DB_HOST`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` a tu instancia local (la base `vuelos_app`).
+4. **Activa Apache y MySQL** desde el panel de control de XAMPP.
+5. **Rutas de prueba** (sin necesidad de alias extra) usando el DocumentRoot por defecto:
+   - Users: `http://localhost/prototipo/backend/users_ms/public/index.php`
+   - Flights: `http://localhost/prototipo/backend/flights_ms/public/index.php`
+   - Frontend: `http://localhost/prototipo/frontend/`
+   Las reglas `.htaccess` ya están incluidas en cada carpeta `public` para que Apache reescriba al `index.php` de Slim.
+   > El frontend detecta automáticamente la carpeta raíz donde se hospeda (por ejemplo `http://127.0.0.1/prototipo/frontend/`) y llama a los microservicios usando la misma raíz (`/backend/users_ms/public`, `/backend/flights_ms/public`). No es necesario cambiar el código si usas `localhost` o `127.0.0.1` mientras mantengas la estructura `htdocs/prototipo`.
+6. (Opcional) Si prefieres URLs cortas, crea dos alias o vhosts que apunten a cada carpeta `public`.
+
+Cada microservicio responde en JSON y valida el token en las rutas protegidas.
+
+### ¿Qué hago al llevarlo a otro equipo?
+1) **Clona o copia toda la carpeta del proyecto** (incluye `composer.json` y `composer.lock` de cada microservicio).
+2) **Elimina solo la carpeta `vendor/` si viene del otro equipo**; no elimines los archivos de Composer.
+3) En el nuevo equipo, ejecuta `composer install` dentro de `backend/users_ms` y `backend/flights_ms` para reconstruir `vendor/` con las versiones bloqueadas en `composer.lock`.
+4) Copia los entornos desde los ejemplos:
+   ```bash
+   cp backend/users_ms/.env.example backend/users_ms/.env
+   cp backend/flights_ms/.env.example backend/flights_ms/.env
+   ```
+   Ajusta credenciales según el MySQL local.
+5) Activa Apache/MySQL y prueba las URLs indicadas arriba o levanta con `php -S` si usas el servidor embebido.
+
+## Paso a paso para probar los microservicios (local/VS Code REST Client)
+1. **Crear la base de datos** en MySQL con el SQL entregado en el enunciado (asegúrate de crear la base `vuelos_app`).
+2. **Instalar dependencias** (una vez por microservicio):
+   ```bash
+   cd backend/users_ms && composer install
+   cd ../flights_ms && composer install
+   ```
+3. **Configurar entorno** copiando los `.env.example` y ajustando usuario/clave de MySQL:
+   ```bash
+   cp backend/users_ms/.env.example backend/users_ms/.env
+   cp backend/flights_ms/.env.example backend/flights_ms/.env
+   ```
+4. **Levantar los servicios** (puedes usar PHP embebido para pruebas rápidas):
+   - Terminal 1:
+     ```bash
+     cd backend/users_ms
+     php -S 127.0.0.1:8001 -t public
+     ```
+   - Terminal 2:
+     ```bash
+     cd backend/flights_ms
+     php -S 127.0.0.1:8002 -t public
+     ```
+   Ajusta `@baseUrl` en los `.http` según los puertos elegidos:
+   - `user-ms.http`: `http://127.0.0.1:8001`
+   - `flights-ms.http`: `http://127.0.0.1:8002`
+5. **Obtener token** con la extensión REST Client de VS Code:
+   - Abre `user-ms.http` y ejecuta la petición **Login** con las credenciales de prueba (`admin@system.com` o `gestor@system.com`).
+   - Copia el valor `token` de la respuesta y pégalo en la variable `@token` de ambos archivos `.http`.
+6. **Probar endpoints protegidos**:
+   - Con token de **administrador** prueba usuarios, vuelos y naves.
+   - Con token de **gestor** prueba creación/listado/cancelación de reservas.
+7. **Frontend**: si prefieres interfaz visual, sirve `frontend/` (por ejemplo `php -S 127.0.0.1:8000 -t frontend`). El frontend detecta:
+   - Si se abre desde `127.0.0.1:8000` o `localhost:8000`, consumirá automáticamente `127.0.0.1:8001` y `127.0.0.1:8002`.
+   - Si se abre desde Apache (`http://localhost/prototipo/frontend/`), usará los microservicios en la misma raíz `backend/users_ms/public` y `backend/flights_ms/public`.
+   - También puedes forzar URLs con query params, por ejemplo: `http://127.0.0.1:8000/?usersApi=http://127.0.0.1:8001&flightsApi=http://127.0.0.1:8002`.
+   Usa las mismas credenciales; el token se guarda en `localStorage` y se envía en cada llamada.
+
+Si recibes 401 en rutas protegidas, revisa que el header `Authorization: Bearer <token>` se envía y que el token existe en la tabla `users`.

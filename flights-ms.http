@@ -1,0 +1,57 @@
+@baseUrl = http://localhost/prototipo/backend/flights_ms/public
+@token = {{token}}
+
+### Listar vuelos (admin)
+GET {{baseUrl}}/flights
+Authorization: Bearer {{token}}
+
+### Buscar vuelos (admin)
+GET {{baseUrl}}/flights/search?origin=Bogotá&destination=Medellín
+Authorization: Bearer {{token}}
+
+### Crear vuelo (admin)
+POST {{baseUrl}}/flights
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "nave_id": 1,
+  "origin": "Bogotá",
+  "destination": "Cartagena",
+  "departure": "2025-12-12 08:00",
+  "arrival": "2025-12-12 09:40",
+  "price": 320000
+}
+
+### Listar naves (admin)
+GET {{baseUrl}}/naves
+Authorization: Bearer {{token}}
+
+### Crear nave (admin)
+POST {{baseUrl}}/naves
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Aeronave Demo",
+  "capacity": 180,
+  "model": "Airbus A320"
+}
+
+### Listar reservas (gestor o admin)
+GET {{baseUrl}}/reservations
+Authorization: Bearer {{token}}
+
+### Crear reserva (gestor o admin)
+POST {{baseUrl}}/reservations
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "user_id": 2,
+  "flight_id": 1
+}
+
+### Cancelar reserva (gestor o admin)
+DELETE {{baseUrl}}/reservations/1
+Authorization: Bearer {{token}}
