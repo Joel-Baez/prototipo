@@ -1,0 +1,533 @@
+// Detect the project base to avoid hardcoding localhost vs 127.0.0.1 and ensure the
+// frontend consumes the two microservices under the same root folder (htdocs/prototipo).
+const projectRoot = window.location.pathname.includes('/frontend')
+    ? window.location.pathname.split('/frontend')[0]
+    : '';
+const BASE_URL = `${window.location.origin}${projectRoot}`;
+
+// Allow overrides via query params when microservicios run on different ports (ej. php -S -t public)
+const params = new URLSearchParams(window.location.search);
+const usersApiOverride = params.get('usersApi');
+const flightsApiOverride = params.get('flightsApi');
+
+// If the frontend is running on a dev port (8000, 3000, 5173), assume microservicios on 8001/8002.
+const devPorts = ['8000', '3000', '5173'];
+const isDevPort = devPorts.includes(window.location.port);
+const guessedUsersApi = `${window.location.protocol}//${window.location.hostname}:8001`;
+const guessedFlightsApi = `${window.location.protocol}//${window.location.hostname}:8002`;
+
+const loginForm = document.getElementById('loginForm');
+const logoutBtn = document.getElementById('logoutBtn');
+const loginSection = document.getElementById('loginSection');
+const adminSection = document.getElementById('adminSection');
+const gestorSection = document.getElementById('gestorSection');
+const toast = document.getElementById('toast');
+const roleBadge = document.getElementById('roleBadge');
+const endpointsInfo = document.getElementById('endpointsInfo');
+
+let USERS_API = '';
+let FLIGHTS_API = '';
+
+const candidates = (override, defaultPath, guessed) =>
+    [override, defaultPath, guessed].filter(Boolean).map((c) => c.replace(/\/$/, ''));
+
+const usersApiCandidates = candidates(
+    usersApiOverride,
+    `${BASE_URL}/backend/users_ms/public`,
+    guessedUsersApi,
+);
+const flightsApiCandidates = candidates(
+    flightsApiOverride,
+    `${BASE_URL}/backend/flights_ms/public`,
+    guessedFlightsApi,
+);
+
+// Valores iniciales mientras se resuelve el endpoint activo
+USERS_API = usersApiCandidates[0];
+FLIGHTS_API = flightsApiCandidates[0];
+
+async function pickApi(baseList, healthPath = '/') {
+    for (const base of baseList) {
+        let timeout;
+        try {
+            const controller = new AbortController();
+            timeout = setTimeout(() => controller.abort(), 1200);
+            const res = await fetch(`${base}${healthPath}`, { signal: controller.signal });
+            if (res.ok) return base;
+        } catch (err) {
+            // Ignorar y probar siguiente opción
+        } finally {
+            clearTimeout(timeout);
+        }
+    }
+    return baseList[0];
+}
+
+async function resolveApis() {
+    USERS_API = await pickApi(usersApiCandidates, '/');
+    FLIGHTS_API = await pickApi(flightsApiCandidates, '/');
+    if (endpointsInfo) {
+        endpointsInfo.textContent = 'APIs listas';
+    }
+}
+
+const apisReady = resolveApis();
+
+// Preferimos sessionStorage para que el token se mantenga solo durante la sesión activa
+const storage = window.sessionStorage;
+// Migrar tokens previos guardados en localStorage si existen
+if (localStorage.getItem('token')) {
+    storage.setItem('token', localStorage.getItem('token'));
+    storage.setItem('role', localStorage.getItem('role'));
+    localStorage.clear();
+}
+const token = () => storage.getItem('token');
+const role = () => storage.getItem('role');
+
+const authHeaders = () => ({
+    'Content-Type': 'application/json',
+    ...(token() ? { Authorization: `Bearer ${token()}` } : {}),
+});
+
+let toastTimer;
+function showToast(message, type = 'error') {
+    if (!toast) return;
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    toast.classList.remove('hidden');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.add('hidden'), 4200);
+}
+
+const actionButtons = (actions = []) => {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'actions-cell';
+    actions.forEach(({ label, onClick, tone = 'ghost' }) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = label;
+        btn.className = `chip ${tone}`;
+        btn.addEventListener('click', onClick);
+        wrapper.appendChild(btn);
+    });
+    return wrapper;
+};
+
+const renderTable = (tableId, data, columns) => {
+    const tbody = document.querySelector(`#${tableId} tbody`);
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    if (!data || data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="${columns.length}" class="empty">Sin datos</td></tr>`;
+        return;
+    }
+
+    data.forEach((item) => {
+        const tr = document.createElement('tr');
+        columns.forEach((col) => {
+            const td = document.createElement('td');
+            if (typeof col === 'function') {
+                td.textContent = col(item);
+            } else if (typeof col === 'object' && col.render) {
+                td.appendChild(col.render(item));
+            } else {
+                td.textContent = item[col] ?? '';
+            }
+            tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+    });
+};
+
+const handleError = async (res) => {
+    let payload = {};
+    try {
+        payload = await res.json();
+    } catch (e) {
+        // Ignorar si la respuesta no tiene cuerpo JSON
+    }
+    if (res.status === 401) {
+        storage.clear();
+        toggleSections();
+    }
+    showToast(payload.error || `Error (${res.status}) en la solicitud`, 'error');
+};
+
+loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    await apisReady;
+    const body = Object.fromEntries(new FormData(loginForm));
+    const res = await fetch(`${USERS_API}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+    });
+
+    if (!res.ok) return handleError(res);
+    const data = await res.json();
+    storage.clear();
+    storage.setItem('token', data.token);
+    storage.setItem('role', data.role);
+    toggleSections();
+    showToast(`Sesión iniciada como ${data.role}`, 'success');
+    if (data.role === 'administrador') {
+        loadUsers();
+        loadNaves();
+    }
+    if (['gestor', 'administrador'].includes(data.role)) {
+        loadFlights();
+    }
+    if (data.role === 'gestor') {
+        loadReservations();
+        loadSearchFlights();
+    }
+});
+
+logoutBtn.addEventListener('click', async () => {
+    await apisReady;
+    if (!token()) return;
+    await fetch(`${USERS_API}/logout`, { method: 'POST', headers: authHeaders() });
+    storage.clear();
+    toggleSections();
+    showToast('Sesión finalizada', 'success');
+});
+
+function toggleSections() {
+    const hasToken = !!token();
+    loginSection.classList.toggle('hidden', hasToken);
+    logoutBtn.classList.toggle('hidden', !hasToken);
+    adminSection.classList.toggle('hidden', !(hasToken && role() === 'administrador'));
+    // Solo el gestor puede operar reservas según los requisitos
+    gestorSection.classList.toggle('hidden', !(hasToken && role() === 'gestor'));
+    if (roleBadge) {
+        roleBadge.textContent = hasToken ? `Rol: ${role()}` : 'Sesión no iniciada';
+    }
+}
+
+toggleSections();
+
+// Validar sesión previa y restaurar el rol/token si el backend confirma el token
+async function restoreSession() {
+    if (!token()) return;
+    const res = await fetch(`${USERS_API}/me`, { headers: authHeaders() });
+    if (!res.ok) {
+        storage.clear();
+        toggleSections();
+        showToast('Tu sesión expiró, inicia de nuevo.', 'error');
+        return;
+    }
+    const data = await res.json();
+    storage.setItem('role', data.role);
+    toggleSections();
+    if (data.role === 'administrador') {
+        loadUsers();
+        loadNaves();
+        loadFlights();
+    }
+    if (data.role === 'gestor') {
+        loadFlights();
+        loadReservations();
+        loadSearchFlights();
+    }
+}
+
+// Admin actions
+const userForm = document.getElementById('userForm');
+document.getElementById('loadUsers').addEventListener('click', loadUsers);
+userForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const body = Object.fromEntries(new FormData(userForm));
+    const res = await fetch(`${USERS_API}/users`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify(body),
+    });
+    if (!res.ok) return handleError(res);
+    userForm.reset();
+    loadUsers();
+});
+
+async function loadUsers() {
+    const res = await fetch(`${USERS_API}/users`, { headers: authHeaders() });
+    if (!res.ok) return handleError(res);
+    const data = await res.json();
+    renderTable('usersTable', data, [
+        'id',
+        'name',
+        'email',
+        'role',
+        {
+            render: (user) => actionButtons([
+                {
+                    label: 'Editar',
+                    onClick: () => updateUser(user),
+                },
+                {
+                    label: 'Cambiar rol',
+                    onClick: () => changeUserRole(user),
+                },
+            ]),
+        },
+    ]);
+}
+
+async function updateUser(user) {
+    const name = prompt('Nombre', user.name);
+    const email = prompt('Email', user.email);
+    const password = prompt('Contraseña (déjalo vacío para no cambiar)');
+    const payload = {};
+    if (name && name !== user.name) payload.name = name;
+    if (email && email !== user.email) payload.email = email;
+    if (password) payload.password = password;
+    if (!Object.keys(payload).length) return;
+    const res = await fetch(`${USERS_API}/users/${user.id}`, {
+        method: 'PUT',
+        headers: authHeaders(),
+        body: JSON.stringify(payload),
+    });
+    if (!res.ok) return handleError(res);
+    loadUsers();
+}
+
+async function changeUserRole(user) {
+    const newRole = prompt('Rol (administrador/gestor)', user.role);
+    if (!newRole) return;
+    const res = await fetch(`${USERS_API}/users/${user.id}/role`, {
+        method: 'PUT',
+        headers: authHeaders(),
+        body: JSON.stringify({ role: newRole }),
+    });
+    if (!res.ok) return handleError(res);
+    loadUsers();
+}
+
+const naveForm = document.getElementById('naveForm');
+document.getElementById('loadNaves').addEventListener('click', loadNaves);
+naveForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const body = Object.fromEntries(new FormData(naveForm));
+    body.capacity = parseInt(body.capacity, 10);
+    const res = await fetch(`${FLIGHTS_API}/naves`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify(body),
+    });
+    if (!res.ok) return handleError(res);
+    naveForm.reset();
+    loadNaves();
+});
+
+async function loadNaves() {
+    const res = await fetch(`${FLIGHTS_API}/naves`, { headers: authHeaders() });
+    if (!res.ok) return handleError(res);
+    const data = await res.json();
+    renderTable('navesTable', data, [
+        'id',
+        'name',
+        'capacity',
+        'model',
+        {
+            render: (nave) => actionButtons([
+                {
+                    label: 'Editar',
+                    onClick: () => updateNave(nave),
+                },
+                {
+                    label: 'Eliminar',
+                    tone: 'danger',
+                    onClick: () => deleteNave(nave.id),
+                },
+            ]),
+        },
+    ]);
+}
+
+async function updateNave(nave) {
+    const name = prompt('Nombre', nave.name);
+    const capacity = prompt('Capacidad', nave.capacity);
+    const model = prompt('Modelo', nave.model);
+    const payload = {};
+    if (name && name !== nave.name) payload.name = name;
+    if (capacity) payload.capacity = Number(capacity);
+    if (model && model !== nave.model) payload.model = model;
+    if (!Object.keys(payload).length) return;
+    const res = await fetch(`${FLIGHTS_API}/naves/${nave.id}`, {
+        method: 'PUT',
+        headers: authHeaders(),
+        body: JSON.stringify(payload),
+    });
+    if (!res.ok) return handleError(res);
+    loadNaves();
+}
+
+async function deleteNave(id) {
+    if (!confirm('¿Eliminar esta nave?')) return;
+    const res = await fetch(`${FLIGHTS_API}/naves/${id}`, {
+        method: 'DELETE',
+        headers: authHeaders(),
+    });
+    if (!res.ok) return handleError(res);
+    loadNaves();
+}
+
+const flightForm = document.getElementById('flightForm');
+document.getElementById('loadFlights').addEventListener('click', loadFlights);
+flightForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const body = Object.fromEntries(new FormData(flightForm));
+    const res = await fetch(`${FLIGHTS_API}/flights`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify(body),
+    });
+    if (!res.ok) return handleError(res);
+    flightForm.reset();
+    loadFlights();
+});
+
+async function loadFlights() {
+    const res = await fetch(`${FLIGHTS_API}/flights`, { headers: authHeaders() });
+    if (!res.ok) return handleError(res);
+    const data = await res.json();
+    renderTable('flightsTable', data, [
+        'id',
+        'origin',
+        'destination',
+        (row) => row.departure?.replace('T', ' ') ?? row.departure,
+        (row) => row.arrival?.replace('T', ' ') ?? row.arrival,
+        'nave_name',
+        (row) => row.price,
+        {
+            render: (flight) => actionButtons([
+                {
+                    label: 'Editar',
+                    onClick: () => updateFlight(flight),
+                },
+                {
+                    label: 'Eliminar',
+                    tone: 'danger',
+                    onClick: () => deleteFlight(flight.id),
+                },
+            ]),
+        },
+    ]);
+}
+
+async function updateFlight(flight) {
+    const payload = {};
+    const fields = [
+        ['nave_id', flight.nave_id],
+        ['origin', flight.origin],
+        ['destination', flight.destination],
+        ['departure', flight.departure?.replace(' ', 'T')],
+        ['arrival', flight.arrival?.replace(' ', 'T')],
+        ['price', flight.price],
+    ];
+    fields.forEach(([key, current]) => {
+        const value = prompt(key, current);
+        if (value !== null && value !== '') payload[key] = value;
+    });
+    if (!Object.keys(payload).length) return;
+    const res = await fetch(`${FLIGHTS_API}/flights/${flight.id}`, {
+        method: 'PUT',
+        headers: authHeaders(),
+        body: JSON.stringify(payload),
+    });
+    if (!res.ok) return handleError(res);
+    loadFlights();
+}
+
+async function deleteFlight(id) {
+    if (!confirm('¿Eliminar este vuelo?')) return;
+    const res = await fetch(`${FLIGHTS_API}/flights/${id}`, {
+        method: 'DELETE',
+        headers: authHeaders(),
+    });
+    if (!res.ok) return handleError(res);
+    loadFlights();
+}
+
+// Gestor actions
+const searchForm = document.getElementById('searchForm');
+async function loadSearchFlights(formData = null) {
+    const params = formData ? new URLSearchParams(formData).toString() : '';
+    const url = params ? `${FLIGHTS_API}/flights?${params}` : `${FLIGHTS_API}/flights`;
+    const res = await fetch(url, { headers: authHeaders() });
+    if (!res.ok) return handleError(res);
+    const data = await res.json();
+    renderTable('searchTable', data, [
+        'id',
+        'origin',
+        'destination',
+        (row) => row.departure?.replace('T', ' ') ?? row.departure,
+        (row) => row.arrival?.replace('T', ' ') ?? row.arrival,
+        'nave_name',
+        (row) => row.price,
+    ]);
+}
+
+searchForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const sanitized = Object.fromEntries(
+        Array.from(new FormData(searchForm)).map(([k, v]) => [k, v.trim()])
+    );
+    // Convertir fechas al formato esperado YYYY-MM-DD
+    if (sanitized.date && sanitized.date.includes('/')) {
+        const [d, m, y] = sanitized.date.split('/');
+        sanitized.date = `${y}-${m}-${d}`;
+    }
+    await loadSearchFlights(sanitized);
+});
+
+const reservationForm = document.getElementById('reservationForm');
+const reservationsUserFilter = document.getElementById('reservationsUserFilter');
+document.getElementById('loadReservations').addEventListener('click', loadReservations);
+reservationForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const body = Object.fromEntries(new FormData(reservationForm));
+    const res = await fetch(`${FLIGHTS_API}/reservations`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify(body),
+    });
+    if (!res.ok) return handleError(res);
+    reservationForm.reset();
+    loadReservations();
+});
+
+async function loadReservations() {
+    const filter = reservationsUserFilter?.value;
+    const query = filter ? `?user_id=${encodeURIComponent(filter)}` : '';
+    const res = await fetch(`${FLIGHTS_API}/reservations${query}`, { headers: authHeaders() });
+    if (!res.ok) return handleError(res);
+    const data = await res.json();
+    renderTable('reservationsTable', data, [
+        'id',
+        'flight_id',
+        'origin',
+        'destination',
+        (row) => row.departure?.replace('T', ' ') ?? row.departure,
+        'status',
+        {
+            render: (reservation) => actionButtons([
+                {
+                    label: 'Cancelar',
+                    tone: 'danger',
+                    onClick: () => cancelReservation(reservation.id),
+                },
+            ]),
+        },
+    ]);
+}
+
+async function cancelReservation(id) {
+    if (!confirm('¿Cancelar esta reserva?')) return;
+    const res = await fetch(`${FLIGHTS_API}/reservations/${id}/cancel`, {
+        method: 'PUT',
+        headers: authHeaders(),
+    });
+    if (!res.ok) return handleError(res);
+    loadReservations();
+}
+
+apisReady.then(() => restoreSession());
